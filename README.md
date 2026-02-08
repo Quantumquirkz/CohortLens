@@ -19,6 +19,11 @@ El proyecto se enfocará en analizar las siguientes partes:
 4. Descubrimiento de Insights
 5. Recomendaciones y Acciones
 
+### Plan de mejora (Plan1)
+Se agrego un plan inicial de optimizacion para ordenar el proyecto,
+mejorar reproducibilidad y convertir resultados en entregables claros.
+Revisar: [PLAN1.md](./PLAN1.md)
+
 ### Profesionales Encargados del Proyecto
 
 #### BACKEND DEVELOPERS:
