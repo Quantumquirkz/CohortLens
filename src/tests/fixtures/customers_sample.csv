@@ -1,0 +1,6 @@
+CustomerID,Gender,Age,Annual Income ($),Spending Score (1-100),Profession,Work Experience,Family Size
+1,Male,25,45000,65,Healthcare,2,3
+2,Female,32,55000,78,Engineer,5,2
+3,Male,45,75000,45,Artist,15,4
+4,Female,28,48000,82,Entertainment,3,2
+5,Male,38,62000,55,Healthcare,10,3
