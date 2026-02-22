@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data
+      - ../reports:/app/reports
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
