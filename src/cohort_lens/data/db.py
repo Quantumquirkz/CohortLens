@@ -163,6 +163,20 @@ def create_schema(engine: Engine) -> None:
         Column("created_at", DateTime, server_default=text("NOW()")),
     )
 
+    Table(
+        "users",
+        metadata,
+        Column("id", Integer, primary_key=True, autoincrement=True),
+        Column("username", String(100), unique=True, nullable=False, index=True),
+        Column("email", String(255), unique=True, nullable=False),
+        Column("hashed_password", String(255), nullable=False),
+        Column("is_active", Boolean, server_default=text("true")),
+        Column("is_admin", Boolean, server_default=text("false")),
+        Column("tenant_id", String(100), index=True),
+        Column("last_login", DateTime, nullable=True),
+        Column("created_at", DateTime, server_default=text("NOW()")),
+    )
+
     metadata.create_all(engine)
     logger.info("Schema created or already exists")
 

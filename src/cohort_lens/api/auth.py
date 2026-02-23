@@ -43,6 +43,16 @@ def get_current_user(
     if not credentials:
         return None
     payload = verify_token(credentials.credentials)
+    if not payload or "sub" not in payload:
+        return None
+    
+    # Try to get fresh user data from DB
+    from cohort_lens.data.users import get_user_by_username
+    user = get_user_by_username(payload["sub"])
+    if user:
+        return user
+        
+    # Fallback to payload data if user not in DB anymore (or during migration)
     return payload
 
 
@@ -69,4 +79,27 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def get_default_user_hash() -> str:
     """Default dev user hash (admin/admin). Override in production."""
+    # Note: password is 'admin' by default
     return pwd_context.hash(os.environ.get("DEFAULT_USER_PASSWORD", "admin"))
+
+
+def authenticate_user(username: str, password: str) -> Optional[dict]:
+    """Authenticate user against DB or dev fallback."""
+    from cohort_lens.data.users import get_user_by_username, update_last_login
+    
+    user = get_user_by_username(username)
+    if not user:
+        # Dev fallback
+        default_user = os.environ.get("DEFAULT_AUTH_USER", "admin")
+        if username == default_user:
+            if verify_password(password, get_default_user_hash()):
+                return {"username": username, "tenant_id": username, "is_admin": True}
+        return None
+    
+    if not user.get("is_active", True):
+        return None
+        
+    if verify_password(password, user["hashed_password"]):
+        update_last_login(username)
+        return user
+    return None
