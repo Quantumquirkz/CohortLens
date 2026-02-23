@@ -21,8 +21,9 @@ stripe>=7.0.0
 matplotlib>=3.7.0,<4.0.0
 seaborn>=0.12.0,<1.0.0
 
-# Data validation
+# Data validation (multimethod<2 required: pandera uses overload removed in multimethod 2.0)
 pandera>=0.17.0,<0.18.0
+multimethod>=1.9,<2.0
 
 # Configuration
 pyyaml>=6.0.0,<7.0.0

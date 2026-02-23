@@ -1,3 +1,7 @@
+# Environment (secrets)
+.env
+.env.local
+
 # Virtual environments
 .venv/
 venv/
@@ -5,6 +9,7 @@ env/
 
 # Python
 __pycache__/
+*.egg-info/
 *.py[cod]
 *.pyo
 .pytest_cache/

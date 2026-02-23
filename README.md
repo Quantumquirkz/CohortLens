@@ -24,12 +24,26 @@ A modular CRM analytics platform for customer segmentation, spending prediction,
    cd CodeCrafters-United
    ```
 
-2. **Virtual environment and install API (backend)**
+2. **Virtual environment and install API (backend)**  
+   On Debian/Ubuntu (or if you see `externally-managed-environment`), **do not** use system `pip`; use a venv.
+
+   **From repo root** (`CohortLens/`):
    ```bash
-   python -m venv .venv
+   python3 -m venv .venv
    source .venv/bin/activate   # Windows: .venv\Scripts\activate
    pip install -r apps/api/requirements.txt
    pip install -e apps/api
+   ```
+
+   **From `apps/api/`** (if you already `cd`’d there):
+   ```bash
+   pip install -r requirements.txt
+   pip install -e .
+   ```
+
+   **Or** run the API with a one-liner from repo root (creates/uses `.venv`):
+   ```bash
+   ./scripts/serve-api.sh
    ```
 
 3. **Frontend (optional)**
@@ -55,7 +69,7 @@ A modular CRM analytics platform for customer segmentation, spending prediction,
 cohortlens run
 ```
 
-Loads data, segments customers, trains the predictor, and generates the report. Or run the API: `cd apps/api && uvicorn main:app --reload`.
+Loads data, segments customers, trains the predictor, and generates the report. Or run the API (with venv): `./scripts/serve-api.sh`, or after activating `.venv`: `cohortlens serve --host 0.0.0.0 --port 8000` / `cd apps/api && uvicorn main:app --reload`.
 
 ## Usage
 
