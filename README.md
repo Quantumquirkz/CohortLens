@@ -6,6 +6,8 @@
 
 A modular CRM analytics platform for customer segmentation, spending prediction, and actionable insights. Transform customer data into decisions with reproducible pipelines, REST APIs, and executive reports.
 
+> **Note:** This project was previously known as **CRM Navigator**. Project stewardship is now under [Jhuomar Boskoll Quintero](https://www.linkedin.com/in/jhuomar/).
+
 ## Installation
 
 ### Prerequisites
@@ -94,7 +96,8 @@ df_segmented, model, scaler = fit_segments(df, n_clusters=6)
 - [Architecture](docs/ARCHITECTURE.md)
 - [API](docs/API.md)
 - [Deployment](docs/DEPLOYMENT.md)
-- [Plan history](docs/history/PLAN1.md)
+- [Roadmap 2026](docs/ROADMAP_2026.md)
+- [DB schema](docs/DB_SCHEMA.md)
 
 ## Team - CodeCrafters United
 
