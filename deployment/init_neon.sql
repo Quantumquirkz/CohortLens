@@ -97,3 +97,31 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_subscriptions_tenant_id ON subscriptions(tenant_id);
+
+-- API usage per tenant per month (for plan limits)
+CREATE TABLE IF NOT EXISTS api_usage (
+    id SERIAL PRIMARY KEY,
+    tenant_id VARCHAR(100) NOT NULL,
+    month_key VARCHAR(7) NOT NULL,
+    call_count INTEGER NOT NULL DEFAULT 0,
+    last_called_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(tenant_id, month_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_usage_tenant_month ON api_usage(tenant_id, month_key);
+
+-- Users (auth)
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    hashed_password VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_admin BOOLEAN DEFAULT FALSE,
+    tenant_id VARCHAR(100),
+    last_login TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id);

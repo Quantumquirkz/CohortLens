@@ -4,10 +4,13 @@ import click
 from cohort_lens.utils.config_reader import load_config
 
 @click.group()
-@click.option("--config", type=click.Path(exists=True), default=None)
+@click.option("--config", type=click.Path(exists=True), default=None, help="Path to config.yaml (default: auto-detect from project root)")
 def cli(config):
+    """CohortLens CLI: run pipeline, segment, predict, report, serve API."""
     if config:
         load_config(config)
+    else:
+        load_config()
 
 @cli.command()
 @click.option("--data-path", type=click.Path(exists=True), default=None)

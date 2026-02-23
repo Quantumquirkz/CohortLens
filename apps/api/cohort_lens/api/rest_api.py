@@ -331,7 +331,7 @@ def predict_spending_explain_by_id(customer_id: str, _user: dict = Depends(requi
 # ---- Data Drift ----
 
 @app.get("/api/v1/drift", tags=["monitoring"])
-def data_drift_check(_user: dict = Depends(require_auth)):
+def data_drift_check(_user: dict = Depends(require_premium)):
     """
     Check for data drift in the current dataset versus the saved baseline.
     Returns per-feature PSI and KS test results.
@@ -342,7 +342,7 @@ def data_drift_check(_user: dict = Depends(require_auth)):
 
 
 @app.post("/api/v1/drift/save-baseline", tags=["monitoring"])
-def save_drift_baseline(_user: dict = Depends(require_auth)):
+def save_drift_baseline(_user: dict = Depends(require_premium)):
     """
     Save current dataset as the drift baseline.
     Should be called after model retraining.
