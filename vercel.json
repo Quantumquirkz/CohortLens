@@ -1,0 +1,6 @@
+{
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm --filter @cohortlens/web build",
+  "framework": null,
+  "outputDirectory": "apps/web/.next"
+}

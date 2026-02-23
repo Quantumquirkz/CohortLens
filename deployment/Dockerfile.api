@@ -1,4 +1,6 @@
-# Build from repo root: docker build -f deployment/Dockerfile .
+# Alias: same as Dockerfile (API backend).
+# Build from repo root: docker build -f deployment/Dockerfile.api .
+
 FROM python:3.11-slim
 WORKDIR /app
 COPY apps/api/ /app/

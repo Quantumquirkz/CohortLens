@@ -11,9 +11,11 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to path
+# Monorepo: cohort_lens package lives in apps/api
 project_root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(project_root))
+apps_api = project_root / "apps" / "api"
+if apps_api.exists() and str(apps_api) not in sys.path:
+    sys.path.insert(0, str(apps_api))
 
 from dotenv import load_dotenv
 

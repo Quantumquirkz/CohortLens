@@ -1,0 +1,45 @@
+"""CohortLens API – install cohort_lens package (apps/api)."""
+from setuptools import setup, find_packages
+
+setup(
+    name="cohortlens",
+    version="0.1.0",
+    author="CodeCrafters United",
+    description="CohortLens API: CRM analytics for segmentation, prediction, and insights",
+    packages=find_packages(),
+    package_dir={"": "."},
+    python_requires=">=3.9",
+    install_requires=[
+        "pandas>=2.0.0",
+        "numpy>=1.24.0",
+        "scikit-learn>=1.3.0",
+        "fastapi>=0.104.0",
+        "uvicorn[standard]>=0.24.0",
+        "pydantic>=2.5.0",
+        "pyyaml>=6.0.0",
+        "python-dotenv>=1.0.0",
+        "click>=8.1.0",
+        "strawberry-graphql[fastapi]>=0.200.0",
+        "python-jose[cryptography]>=3.3.0",
+        "passlib[bcrypt]>=1.7.0",
+        "sqlalchemy>=2.0.0",
+        "psycopg2-binary>=2.9.0",
+        "matplotlib>=3.7.0",
+        "seaborn>=0.12.0",
+        "pandera>=0.17.0",
+        "jinja2>=3.1.0",
+        "joblib>=1.3.0",
+        "tqdm>=4.66.0",
+        "scipy>=1.11.0",
+        "requests>=2.31.0",
+        "stripe>=7.0.0",
+        "openai>=1.0.0",
+        "weasyprint>=60.0; sys_platform != 'win32'",
+        "tabulate>=0.9.0",
+    ],
+    entry_points={
+        "console_scripts": [
+            "cohortlens=cohort_lens.cli:main",
+        ],
+    },
+)

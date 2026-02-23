@@ -1,0 +1,14 @@
+{
+  "name": "cohortlens",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @cohortlens/web dev",
+    "build": "pnpm run build --recursive",
+    "lint": "pnpm run lint --recursive"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  },
+  "packageManager": "pnpm@8.x"
+}
