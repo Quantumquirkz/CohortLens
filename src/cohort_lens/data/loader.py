@@ -1,5 +1,6 @@
 """Data loader with validation and optional caching."""
 
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -15,9 +16,22 @@ _cached_df: Optional[pd.DataFrame] = None
 _cached_path: Optional[str] = None
 
 
+def _get_data_source() -> str:
+    """Return 'csv' or 'neon' based on DATA_SOURCE env var."""
+    return os.environ.get("DATA_SOURCE", "csv").lower()
+
+
 def load_customers(path: Optional[str | Path] = None, validate: bool = True) -> pd.DataFrame:
-    """Load customer CSV with optional validation and caching."""
+    """Load customers from CSV or Neon DB. Use DATA_SOURCE=csv|neon to select source."""
     global _cached_df, _cached_path
+
+    if _get_data_source() == "neon":
+        from cohort_lens.data.db import load_customers_from_db
+        df = load_customers_from_db()
+        if validate:
+            customer_schema.validate(df)
+        logger.info("Loaded %d rows from Neon DB", len(df))
+        return df
 
     cfg = get_config()
     root = get_project_root()
