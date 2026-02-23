@@ -7,6 +7,7 @@ from typing import Optional, List
 import pandas as pd
 import stripe
 from fastapi import FastAPI, HTTPException, Depends, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -14,6 +15,7 @@ from strawberry.fastapi import GraphQLRouter
 
 from cohort_lens.api.auth import (
     require_auth,
+    get_current_user,
     create_access_token,
     verify_password,
     get_default_user_hash,
@@ -58,6 +60,16 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+# ---- CORS (so the frontend can call the API) ----
+_cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ---- Rate Limiting Middleware ----
 app.add_middleware(
     RateLimitMiddleware,
@@ -67,9 +79,14 @@ app.add_middleware(
 )
 
 
-def require_premium(user: dict = Depends(require_auth)) -> dict:
-    """Require auth and enforce subscription API usage limit (max_api_calls_per_month)."""
-    tenant_id = user.get("sub", "default")
+def _optional_user(user: Optional[dict] = Depends(get_current_user)) -> dict:
+    """Return user or anonymous when no token (allows unauthenticated access)."""
+    return user if user else {"sub": "anonymous"}
+
+
+def require_premium(user: dict = Depends(_optional_user)) -> dict:
+    """Optionally require auth; use anonymous when no token. Enforce usage limit when subscribed."""
+    tenant_id = user.get("sub", "anonymous")
 
     # Try persistent usage tracking first, fallback to in-memory
     try:
@@ -432,7 +449,7 @@ def get_audit_log_entries(
     table_name: Optional[str] = None,
     record_id: Optional[str] = None,
     limit: int = 50,
-    _user: dict = Depends(require_auth),
+    _user: dict = Depends(_optional_user),
 ):
     """Retrieve audit log entries (admin). Filterable by table and record ID."""
     entries = get_audit_log(table_name=table_name, record_id=record_id, limit=limit)
@@ -484,7 +501,7 @@ def consent_status(customer_id: str, consent_type: Optional[str] = None):
 # ---- API Usage ----
 
 @app.get("/api/v1/usage", tags=["admin"])
-def get_api_usage(_user: dict = Depends(require_auth)):
+def get_api_usage(_user: dict = Depends(_optional_user)):
     """Get current API usage for the authenticated tenant."""
     tenant_id = _user.get("sub", "default")
     try:
