@@ -1,10 +1,26 @@
 """Executive report generation for CohortLens."""
+import os
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 from jinja2 import Template
 
 from cohort_lens.utils.config_reader import get_config, get_project_root
+
+
+def _filter_metrics(metrics: Dict[str, Any], selected: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Filter metrics by selected keys."""
+    if not selected:
+        return metrics
+    return {k: v for k, v in metrics.items() if k in selected}
+
+
+def _filter_figures(figures: Dict[str, str], selected: Optional[List[str]] = None) -> Dict[str, str]:
+    """Filter figures by selected names."""
+    if not selected:
+        return figures
+    return {k: v for k, v in figures.items() if k in selected}
 
 
 REPORT_HTML = """
@@ -69,8 +85,12 @@ def generate_executive_report(
     figures_dir: Path | None = None,
     output_path: Path | None = None,
     recommendations: Dict | None = None,
+    metrics_selection: Optional[List[str]] = None,
+    figures_selection: Optional[List[str]] = None,
+    upload_to_ipfs: Optional[bool] = None,
+    tenant_id: Optional[str] = None,
 ) -> Path:
-    """Generate HTML executive report."""
+    """Generate HTML executive report. Optionally upload to IPFS and store CID in Neon."""
     from cohort_lens.features.segmentation import interpret_segments
     from cohort_lens.insights.recommender import generate_segment_recommendations
 
@@ -93,6 +113,12 @@ def generate_executive_report(
     for f in fig_dir.glob("*.png"):
         figures[f.stem] = str(f.name)
 
+    rep_cfg = cfg.get("reporting", {})
+    metrics_sel = metrics_selection or rep_cfg.get("metrics", list(metrics.keys()))
+    figures_sel = figures_selection or rep_cfg.get("figures", list(figures.keys()))
+    metrics = _filter_metrics(metrics, metrics_sel)
+    figures = _filter_figures(figures, figures_sel)
+
     tpl = Template(REPORT_HTML)
     html = tpl.render(
         metrics=metrics,
@@ -101,4 +127,21 @@ def generate_executive_report(
         figures=figures,
     )
     out_path.write_text(html, encoding="utf-8")
+
+    do_ipfs = upload_to_ipfs if upload_to_ipfs is not None else os.environ.get("REPORT_UPLOAD_IPFS", "").lower() in ("1", "true", "yes")
+    if do_ipfs:
+        from cohort_lens.web3.ipfs_client import upload_to_ipfs as ipfs_upload, store_ipfs_artifact
+        content = out_path.read_bytes()
+        cid = ipfs_upload(content, filename=out_path.name)
+        if cid:
+            store_ipfs_artifact(
+                cid,
+                artifact_type="report",
+                metadata={
+                    "tenant_id": tenant_id,
+                    "generated_at": datetime.utcnow().isoformat(),
+                    "output_path": str(out_path),
+                },
+            )
+
     return out_path
