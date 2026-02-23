@@ -13,7 +13,9 @@ from cohort_lens.insights import compute_savings_metrics, compute_correlation_ma
 from cohort_lens.visualization.plots import (
     plot_gender_distribution,
     plot_clusters,
+    plot_clusters_plotly,
     plot_correlation_heatmap,
+    plot_correlation_heatmap_plotly,
     plot_savings,
 )
 
@@ -38,17 +40,25 @@ with tabs[0]:
     st.pyplot(fig)
     corr = compute_correlation_matrix(df)
     st.subheader("Correlation Matrix")
-    fig2 = plot_correlation_heatmap(corr)
-    if fig2:
-        st.pyplot(fig2)
+    fig_plotly = plot_correlation_heatmap_plotly(corr)
+    if fig_plotly:
+        st.plotly_chart(fig_plotly, use_container_width=True)
+    else:
+        fig2 = plot_correlation_heatmap(corr)
+        if fig2:
+            st.pyplot(fig2)
 
 with tabs[1]:
     st.subheader("Customer Segmentation")
     df_seg, _, _ = fit_segments(df)
     st.dataframe(df_seg[["CustomerID", "Cluster", "Age", "Annual Income ($)", "Spending Score (1-100)"]].head(50))
-    fig = plot_clusters(df_seg)
-    if fig:
-        st.pyplot(fig)
+    fig_plotly = plot_clusters_plotly(df_seg)
+    if fig_plotly:
+        st.plotly_chart(fig_plotly, use_container_width=True)
+    else:
+        fig = plot_clusters(df_seg)
+        if fig:
+            st.pyplot(fig)
 
 with tabs[2]:
     st.subheader("Spending Prediction")

@@ -165,6 +165,33 @@ def plot_correlation_heatmap(
     return fig
 
 
+def plot_clusters_plotly(
+    df: pd.DataFrame,
+    x_col: str = "Annual Income ($)",
+    y_col: str = "Spending Score (1-100)",
+    cluster_col: str = "Cluster",
+):
+    """Interactive Plotly scatter plot of clusters."""
+    try:
+        import plotly.express as px
+        return px.scatter(
+            df, x=x_col, y=y_col, color=cluster_col,
+            title="Customer Segmentation",
+            color_continuous_scale="Viridis",
+        )
+    except ImportError:
+        return None
+
+
+def plot_correlation_heatmap_plotly(corr: pd.DataFrame):
+    """Interactive Plotly heatmap of correlation matrix."""
+    try:
+        import plotly.express as px
+        return px.imshow(corr, text_auto=".2f", aspect="auto", title="Correlation Matrix")
+    except ImportError:
+        return None
+
+
 def plot_savings(
     df: pd.DataFrame,
     id_col: str = "CustomerID",

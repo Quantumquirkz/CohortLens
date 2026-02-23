@@ -12,3 +12,6 @@ services:
     environment:
       - API_HOST=0.0.0.0
       - API_PORT=8000
+      - DATA_SOURCE=${DATA_SOURCE:-csv}
+      - NEON_DATABASE_URL=${NEON_DATABASE_URL:-}
+      - JWT_SECRET=${JWT_SECRET:-cohortlens-dev-secret}
