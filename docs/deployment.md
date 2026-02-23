@@ -38,7 +38,8 @@ Deploy **apps/api** on Railway, Render, Fly.io, or similar (or Vercel with `apps
 | `JWT_SECRET` | JWT signing key (change in production) |
 | `DEFAULT_AUTH_USER` / `DEFAULT_USER_PASSWORD` | Default user |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Subscriptions |
-| `OPENAI_API_KEY` | RAG (natural-language recommendations) |
+| `GROQ_API_KEY` | Groq API key for RAG (natural-language recommendations). Get at https://console.groq.com |
+| `GROQ_MODEL` | Optional. Default from config (e.g. llama-3.3-70b-versatile) |
 
 Copy `.env.example` to `.env` and fill in.
 

@@ -27,7 +27,7 @@ Load data (CSV or Neon DB) → Clean → Segment (clusters) → Predict spending
 |------|----------------|
 | **data** | Load CSV, validate with Pandera, clean, persist to Neon, audit, drift detection. |
 | **features** | Segmentation (KMeans/GMM/DBSCAN) and spending prediction (regression/random forest). |
-| **insights** | Stats, correlations, segment recommendations, RAG (natural-language recommendations). |
+| **insights** | Stats, correlations, segment recommendations, RAG with **Groq** (natural-language recommendations). |
 | **visualization** | Charts and executive reports (HTML/PDF). |
 | **api** | REST, GraphQL, JWT, rate limit, per-tenant usage, subscriptions (Stripe). |
 | **web3** | Consent records and optional IPFS for reports. |

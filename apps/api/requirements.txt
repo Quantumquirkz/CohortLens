@@ -8,8 +8,8 @@ numpy>=1.24.0,<2.0.0
 scikit-learn>=1.3.0,<2.0.0
 shap>=0.43.0,<0.45.0
 
-# RAG (optional)
-openai>=1.0.0
+# AI/LLM: Groq for RAG (natural-language recommendations)
+groq>=0.4.0
 
 # Web3 / IPFS
 requests>=2.31.0

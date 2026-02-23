@@ -37,6 +37,7 @@ This document describes how the CohortLens backend (API and `cohort_lens` packag
 | **models** | `random_seed`; `segmentation`: algorithm (kmeans/dbscan/gmm), features, n_clusters, silhouette_range; `prediction`: target, numerical/categorical features, test_size, cv_folds. |
 | **features** | Numerical/categorical columns and `id_column` (CustomerID). |
 | **reporting** | format (html/pdf), save_path, figures_path, dpi, metrics and figures to include. |
+| **ai** | LLM provider (Groq): `model`, `max_tokens`, `temperature`. Overridable by `GROQ_MODEL` env. |
 | **logging** | level, format. |
 
 ### 2.3 How it is used in code
@@ -176,7 +177,7 @@ All of this lives in `cohort_lens.utils.config_reader`.
   - `compute_savings_metrics(df)` (income, estimated spend, savings %).  
   - `generate_segment_recommendations(df_seg)` (recommendations per segment; uses `interpret_segments`).
 - **RAG:** `cohort_lens.insights.rag`  
-  - `get_natural_recommendation(question, optional_context)` uses OpenAI/Anthropic for natural-language answers. Used in `POST /api/v1/recommendations/natural`.
+  - `get_natural_recommendation(question, optional_context)` uses **Groq** as the LLM for natural-language answers. Config in `config.yaml` under `ai` (model, max_tokens, temperature); `GROQ_API_KEY` and optional `GROQ_MODEL` in env. Used in `POST /api/v1/recommendations/natural`.
 
 ---
 

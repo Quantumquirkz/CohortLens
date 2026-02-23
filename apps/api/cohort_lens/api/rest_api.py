@@ -260,7 +260,7 @@ def segment_batch(customers: list[dict], _user: dict = Depends(require_premium))
     return {"clusters": labels.tolist()}
 
 
-# ---- RAG Recommendations ----
+# ---- RAG Recommendations (Groq LLM) ----
 
 class NaturalRecommendationRequest(BaseModel):
     """Request schema for natural language recommendation."""
@@ -273,7 +273,7 @@ class NaturalRecommendationRequest(BaseModel):
 
 @app.post("/api/v1/recommendations/natural", tags=["insights"])
 def recommendations_natural(req: NaturalRecommendationRequest, _user: dict = Depends(require_premium)):
-    """Generate natural language recommendations using RAG (or rule-based fallback) (premium)."""
+    """Generate natural language recommendations using RAG with Groq (or rule-based fallback if no API key) (premium)."""
     df = load_customers()
     df = clean_customers(df)
     df_seg, _, _ = fit_segments(df)

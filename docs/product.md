@@ -11,7 +11,7 @@ CohortLens is a **customer analytics SaaS platform**: segmentation, spending pre
    Estimates spending or score per customer. Includes explanations (SHAP) to see which factors matter most.
 
 3. **Recommends actions**  
-   Savings metrics per customer and recommendations per segment. Optionally natural-language recommendations (RAG with LLM).
+   Savings metrics per customer and recommendations per segment. Natural-language recommendations via RAG powered by **Groq** (LLM).
 
 4. **Reports**  
    Executive reports in HTML or PDF (charts, segments, metrics).

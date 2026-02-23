@@ -48,6 +48,13 @@ reporting:
     - gender
     - savings
 
+# AI/LLM: Groq for RAG and natural-language recommendations
+ai:
+  provider: groq
+  model: llama-3.3-70b-versatile
+  max_tokens: 150
+  temperature: 0.3
+
 logging:
   level: "INFO"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

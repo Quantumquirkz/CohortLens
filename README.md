@@ -4,7 +4,7 @@
   <img src="https://github.com/Jhuomar-Barria/CodeCrafters-United/assets/124087234/47b596cc-1d13-48e3-a037-25b02a846265" alt="CodeCrafters United">
 </p>
 
-A modular CRM analytics platform for customer segmentation, spending prediction, and actionable insights. Transform customer data into decisions with reproducible pipelines, REST APIs, and executive reports.
+A modular CRM analytics platform for customer segmentation, spending prediction, and actionable insights. AI-powered natural-language recommendations use **Groq** as the LLM. Transform customer data into decisions with reproducible pipelines, REST APIs, and executive reports.
 
 > **Note:** This project was previously known as **CRM Navigator**. Project stewardship is now under [Jhuomar Boskoll Quintero](https://www.linkedin.com/in/jhuomar/).
 

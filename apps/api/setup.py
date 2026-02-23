@@ -33,7 +33,7 @@ setup(
         "scipy>=1.11.0",
         "requests>=2.31.0",
         "stripe>=7.0.0",
-        "openai>=1.0.0",
+        "groq>=0.4.0",
         "weasyprint>=60.0; sys_platform != 'win32'",
         "tabulate>=0.9.0",
     ],
