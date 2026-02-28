@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, TooManyRequestsException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { PredictDto } from './dto/predict.dto';
@@ -63,7 +63,7 @@ export class AnalyticsService {
     });
 
     if (usage.callCount >= limit) {
-      throw new TooManyRequestsException('Plan limit exceeded');
+      throw new HttpException('Plan limit exceeded', HttpStatus.TOO_MANY_REQUESTS);
     }
 
     await this.prisma.apiUsage.update({
@@ -247,7 +247,7 @@ export class AnalyticsService {
       },
     });
 
-    const normalized: SegmentInput[] = rows.map((r) => ({
+    const normalized: SegmentInput[] = rows.map((r: any) => ({
       CustomerID: r.customerId,
       Age: r.age ?? 30,
       'Annual Income ($)': Number(r.annualIncome),

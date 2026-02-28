@@ -18,6 +18,6 @@
       "@cohortlens/contracts": ["../../packages/contracts/src"]
     }
   },
-  "include": ["src/**/*", "prisma/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*", "tests/**/*", "prisma/**/*"],
+  "exclude": ["node_modules", "dist", "coverage", "coverage-e2e"]
 }

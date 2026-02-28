@@ -25,3 +25,7 @@ jobs:
         run: pnpm --filter @cohortlens/contracts lint
       - name: Typecheck api-ts
         run: pnpm --filter @cohortlens/api-ts lint
+      - name: Run e2e tests
+        run: pnpm --filter @cohortlens/api-ts test:e2e
+      - name: Run unit tests
+        run: pnpm --filter @cohortlens/api-ts test
