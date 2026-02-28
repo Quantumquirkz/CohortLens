@@ -7,6 +7,7 @@ import { FeatureFlagService } from '../src/common/feature-flag.service';
 describe('Admin Controller - Feature Flag Management (e2e)', () => {
   let app: INestApplication;
   let featureFlagService: FeatureFlagService;
+  let accessToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -16,6 +17,12 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     app = moduleFixture.createNestApplication();
     featureFlagService = moduleFixture.get<FeatureFlagService>(FeatureFlagService);
     await app.init();
+
+    // obtain admin token for authenticated endpoints
+    const authRes = await request(app.getHttpServer())
+      .post('/api/v2/auth/token')
+      .send({ username: 'admin', password: 'admin' });
+    accessToken = authRes.body.access_token;
   });
 
   afterAll(async () => {
@@ -51,6 +58,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Initially set to true (from env or default)
       let response = await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_enabled: false })
         .expect(200);
 
@@ -66,6 +74,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Re-enable for other tests
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_enabled: true })
         .expect(200);
     });
@@ -73,6 +82,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should update migration logging flag', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ migration_logging: true })
         .expect(200);
 
@@ -81,6 +91,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Cleanup
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ migration_logging: false })
         .expect(200);
     });
@@ -88,6 +99,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should return updated flag state in response', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_primary: false })
         .expect(200);
 
@@ -100,6 +112,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should set v2_primary=true and migration_logging=true', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v2/admin/migrate-to-v2')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       expect(response.body.message).toContain('Migrated to v2 primary');
@@ -111,6 +124,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Pre-condition: set v2_primary=true
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_primary: true })
         .expect(200);
 
@@ -124,6 +138,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should indicate v2 is receiving traffic after migration', async () => {
       await request(app.getHttpServer())
         .post('/api/v2/admin/migrate-to-v2')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       const response = await request(app.getHttpServer())
@@ -140,11 +155,13 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Pre-condition: set v2_primary=true
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_primary: true })
         .expect(200);
 
       const response = await request(app.getHttpServer())
         .post('/api/v2/admin/rollback-to-v1')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       expect(response.body.message).toContain('Rolled back to v1');
@@ -156,11 +173,13 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Ensure we are in v3 phase first
       await request(app.getHttpServer())
         .post('/api/v2/admin/migrate-to-v2')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       // Rollback
       await request(app.getHttpServer())
         .post('/api/v2/admin/rollback-to-v1')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       const response = await request(app.getHttpServer())
@@ -173,6 +192,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should allow v1 to become primary again', async () => {
       await request(app.getHttpServer())
         .post('/api/v2/admin/rollback-to-v1')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       const response = await request(app.getHttpServer())
@@ -187,6 +207,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should set shadow_mode=true and migration_logging=true', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v2/admin/enable-shadow-mode')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       expect(response.body.message).toContain('Shadow mode enabled');
@@ -196,6 +217,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should keep v2_primary=false (v1 still primary)', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v2/admin/enable-shadow-mode')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       expect(response.body.status.v2_primary).toBe(false);
@@ -219,6 +241,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should set v1_deprecated=true', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v2/admin/complete-v1-deprecation')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       expect(response.body.message).toContain('deprecated');
@@ -229,6 +252,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Pre-condition: v2_primary=true, v1_deprecated=true
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_primary: true, v1_deprecated: true })
         .expect(200);
 
@@ -242,6 +266,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
     it('should indicate v1 is no longer accepting requests', async () => {
       await request(app.getHttpServer())
         .post('/api/v2/admin/complete-v1-deprecation')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       const response = await request(app.getHttpServer())
@@ -257,6 +282,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Disable v2
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_enabled: false })
         .expect(200);
 
@@ -271,6 +297,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Re-enable
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_enabled: true })
         .expect(200);
     });
@@ -279,6 +306,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Ensure enabled
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_enabled: true })
         .expect(200);
 
@@ -300,14 +328,11 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
   });
 
   describe('Admin endpoint security', () => {
-    it('should allow flag updates without auth for now (beta)', async () => {
-      // In production, add Authorization header validation
+    it('should reject flag updates without auth (beta now requires JWT)', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
         .send({ v2_enabled: true })
-        .expect(200);
-
-      expect(response.body).toHaveProperty('flags');
+        .expect(401);
     });
 
     it('should return comprehensive migration status', async () => {
@@ -328,6 +353,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Reset to Phase 1
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({
           v2_enabled: true,
           v2_primary: false,
@@ -339,6 +365,7 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Transition to Phase 2
       await request(app.getHttpServer())
         .post('/api/v2/admin/enable-shadow-mode')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       const response = await request(app.getHttpServer())
@@ -352,12 +379,14 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Start in shadow mode
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ shadow_mode: true, v2_primary: false })
         .expect(200);
 
       // Migrate to v2 primary
       await request(app.getHttpServer())
         .post('/api/v2/admin/migrate-to-v2')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       const response = await request(app.getHttpServer())
@@ -371,12 +400,14 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       // Ensure v2 is primary
       await request(app.getHttpServer())
         .post('/api/v2/admin/flags')
+        .set('Authorization', `Bearer ${accessToken}`)
         .send({ v2_primary: true })
         .expect(200);
 
       // Complete deprecation
       await request(app.getHttpServer())
         .post('/api/v2/admin/complete-v1-deprecation')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       const response = await request(app.getHttpServer())
