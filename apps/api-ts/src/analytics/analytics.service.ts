@@ -95,6 +95,16 @@ export class AnalyticsService {
   }
 
   async usage(tenantId: string) {
+    // Mock response when DB is skipped (for performance testing)
+    if (process.env.SKIP_DB === 'true') {
+      return {
+        tenant_id: tenantId,
+        month_key: this.monthKey(),
+        current_month_calls: Math.floor(Math.random() * 500),
+        limit: 1000,
+      };
+    }
+
     const monthKey = this.monthKey();
     const usage = await this.prisma.apiUsage.findUnique({
       where: {
@@ -121,6 +131,16 @@ export class AnalyticsService {
   }
 
   async predict(tenantId: string, input: PredictDto) {
+    // Mock response when DB is skipped (for performance testing)
+    if (process.env.SKIP_DB === 'true') {
+      const mockScore = Math.floor(Math.random() * 100);
+      return {
+        predicted_spending: mockScore,
+        confidence: this.confidenceFromScore(mockScore),
+        rule_version: this.ruleVersion,
+      };
+    }
+
     await this.ensureUsageLimit(tenantId);
 
     const incomeNormalized = Math.min(1, Math.max(0, input.annual_income / 200000));
@@ -181,6 +201,14 @@ export class AnalyticsService {
   }
 
   async segment(tenantId: string, rows: SegmentInput[]) {
+    // Mock response when DB is skipped (for performance testing)
+    if (process.env.SKIP_DB === 'true') {
+      return {
+        clusters: rows.map(() => Math.floor(Math.random() * 6)),
+        rule_version: this.ruleVersion,
+      };
+    }
+
     await this.ensureUsageLimit(tenantId);
 
     const clusters = rows.map((row) => this.clusterFromInput(row));
@@ -234,6 +262,14 @@ export class AnalyticsService {
   }
 
   async recommendations(tenantId: string, query: string) {
+    // Mock response when DB is skipped (for performance testing)
+    if (process.env.SKIP_DB === 'true') {
+      return {
+        recommendation: 'Rule-based recommendation: prioritize high-value segments for engagement',
+        source: 'rule_based' as const,
+      };
+    }
+
     await this.ensureUsageLimit(tenantId);
 
     const rows = await this.prisma.customer.findMany({

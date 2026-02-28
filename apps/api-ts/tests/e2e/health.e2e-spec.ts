@@ -1,15 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+// health endpoints are under v2 as well
+process.env.FEATURE_FLAG_V2_ENABLED = 'true';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
+import { PrismaService } from '../../src/prisma/prisma.service';
 
 describe('Health Endpoint (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
+    // stub PrismaService as in analytics tests; health only needs to avoid
+    // connecting during module init
+    const prismaStub: any = {
+      $connect: async () => {},
+      $queryRaw: async () => [] as any,
+    };
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(prismaStub)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

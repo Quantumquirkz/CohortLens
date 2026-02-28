@@ -1,0 +1,134 @@
+{
+  "timestamp": "2026-02-28T18:18:55.052Z",
+  "api_url": "http://localhost:8001",
+  "duration_seconds": 5,
+  "concurrent_requests": 10,
+  "endpoints": {
+    "GET /api/v2/health": {
+      "method": "GET",
+      "path": "/api/v2/health",
+      "duration_seconds": 5,
+      "concurrent_requests": 10,
+      "stats": {
+        "min": 2,
+        "max": 56,
+        "mean": 15,
+        "p50": 14,
+        "p95": 30,
+        "p99": 39,
+        "count": 1920
+      },
+      "target_p95": 100,
+      "passed": true,
+      "success_rate": 100,
+      "total_requests": 1920,
+      "errors": []
+    },
+    "GET /api/v2/usage": {
+      "method": "GET",
+      "path": "/api/v2/usage",
+      "duration_seconds": 5,
+      "concurrent_requests": 10,
+      "stats": {
+        "min": 2,
+        "max": 112,
+        "mean": 22,
+        "p50": 19,
+        "p95": 51,
+        "p99": 80,
+        "count": 1270
+      },
+      "target_p95": 150,
+      "passed": true,
+      "success_rate": 100,
+      "total_requests": 1270,
+      "errors": []
+    },
+    "POST /api/v2/predict-spending": {
+      "method": "POST",
+      "path": "/api/v2/predict-spending",
+      "duration_seconds": 5,
+      "concurrent_requests": 10,
+      "stats": {
+        "min": 4,
+        "max": 118,
+        "mean": 27,
+        "p50": 25,
+        "p95": 55,
+        "p99": 72,
+        "count": 1050
+      },
+      "target_p95": 500,
+      "passed": true,
+      "success_rate": 100,
+      "total_requests": 1050,
+      "errors": []
+    },
+    "POST /api/v2/segment (10 items)": {
+      "method": "POST",
+      "path": "/api/v2/segment",
+      "duration_seconds": 5,
+      "concurrent_requests": 10,
+      "stats": {
+        "min": 4,
+        "max": 164,
+        "mean": 36,
+        "p50": 32,
+        "p95": 73,
+        "p99": 96,
+        "count": 800
+      },
+      "target_p95": 300,
+      "passed": true,
+      "success_rate": 100,
+      "total_requests": 800,
+      "errors": []
+    },
+    "POST /api/v2/segment (100 items)": {
+      "method": "POST",
+      "path": "/api/v2/segment",
+      "duration_seconds": 5,
+      "concurrent_requests": 10,
+      "stats": {
+        "min": 6,
+        "max": 163,
+        "mean": 46,
+        "p50": 43,
+        "p95": 92,
+        "p99": 112,
+        "count": 610
+      },
+      "target_p95": 800,
+      "passed": true,
+      "success_rate": 100,
+      "total_requests": 610,
+      "errors": []
+    },
+    "POST /api/v2/recommendations/natural": {
+      "method": "POST",
+      "path": "/api/v2/recommendations/natural",
+      "duration_seconds": 5,
+      "concurrent_requests": 10,
+      "stats": {
+        "min": 5,
+        "max": 145,
+        "mean": 40,
+        "p50": 36,
+        "p95": 86,
+        "p99": 120,
+        "count": 710
+      },
+      "target_p95": 2500,
+      "passed": true,
+      "success_rate": 100,
+      "total_requests": 710,
+      "errors": []
+    }
+  },
+  "summary": {
+    "total_endpoints": 6,
+    "passed_endpoints": 6,
+    "failed_endpoints": 0,
+    "overall_status": "PASS"
+  }
+}

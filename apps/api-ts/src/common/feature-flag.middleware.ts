@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { FeatureFlagService } from './feature-flag.service';
+import { FeatureFlagService, FeatureFlag } from './feature-flag.service';
 
 /**
  * Middleware for v2 API endpoints
@@ -16,13 +16,17 @@ export class FeatureFlagMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const startTime = Date.now();
     
-    // Skip feature flag check for admin endpoints
-    if (req.path.startsWith('/api/v2/admin')) {
+    // Skip feature flag check for admin endpoints.  Depending on how the
+    // middleware is mounted, `req.path` may be trimmed (e.g. '/admin/...' when
+    // the '/api/v2' prefix is stripped), so use `originalUrl` for a reliable
+    // check of the full request path.
+    const fullPath = req.originalUrl || req.url || req.path;
+    if (fullPath.startsWith('/api/v2/admin')) {
       return next();
     }
 
     // Check if v2 is enabled (killswitch)
-    if (!this.featureFlags.isEnabled('V2_ENABLED')) {
+    if (!this.featureFlags.isEnabled(FeatureFlag.V2_ENABLED)) {
       return res.status(503).json({
         statusCode: 503,
         message: 'v2 API is temporarily unavailable',
@@ -36,7 +40,7 @@ export class FeatureFlagMiddleware implements NestMiddleware {
       const responseTime = Date.now() - startTime;
       
       // Log v2 usage for migration monitoring
-      if (this.featureFlags.isEnabled('MIGRATION_LOGGING')) {
+      if (this.featureFlags.isEnabled(FeatureFlag.MIGRATION_LOGGING)) {
         console.log(`[V2_ENDPOINT] ${req.method} ${req.path} ${res.statusCode} ${responseTime}ms`);
       }
 

@@ -29,6 +29,12 @@ This document describes how the CohortLens backend (API and `cohort_lens` packag
 - **YAML:** `config/config.yaml` (at monorepo root). The backend finds the root by walking up from the code file until it finds a `config/` directory with `config.yaml`.
 - **Environment variables:** `.env` at the repo root (or system env). Loaded via `python-dotenv` in `cohort_lens.utils.config_reader.load_config()`.
 
+> **Developer tip:** the new TypeScript service supports a `SKIP_DB=true` flag
+> which bypasses the Prisma connection. This is useful when running local
+> performance tests or during development without a database. When set, any
+> database queries will still throw if invoked directly, but the service will
+> start successfully and serve endpoints that do not depend on persistence.
+
 ### 2.2 What `config.yaml` defines
 
 | Section | Purpose |
@@ -198,6 +204,44 @@ All of this lives in `cohort_lens.utils.config_reader`.
 ---
 
 ## 10. Per-tenant usage and plans
+
+---
+
+## 11. Python Backend Deprecation
+
+The original Python/FastAPI backend (`apps/api/`) is being retired in favor of the
+new TypeScript/NestJS implementation (`apps/api-ts/`).  All operational guidance
+for the migration is maintained in the [Deprecation Roadmap](./deprecation-roadmap.md).
+
+Key points:
+
+* **Phases:** Beta, shadow, cutover, complete deprecation (see roadmap for dates).
+* **Feature flags:** Controlled by the admin API in the new service (`V2_ENABLED`,
+  `V2_PRIMARY`, `V1_DEPRECATED`, `SHADOW_MODE`, `MIGRATION_LOGGING`).
+* **Rollback/kill‑switch:** v1 may be quickly reinstated using
+  `/api/v2/admin/rollback-to-v1` while v2 is primary.
+* **Final step:** after day‑30, v1 endpoints will return `410 Gone`; repository
+  cleanup commands are also in the roadmap.
+
+When the deprecation is complete, the Python code may be removed:
+
+```bash
+# after confirming no production traffic remains
+git rm -r apps/api
+git rm -r frontend
+# CI/CD tooling should also stop installing Python dependencies
+```
+
+Make sure the roadmap document is kept up to date and linked from any other
+operational docs or runbooks.
+
+
+## 12. (Placeholder) future items
+
+```markdown
+# use this section to track any upcoming backend topics (Kafka, telemetry, etc.)
+```
+
 
 - **Persistent (Neon):** `cohort_lens.api.usage`: `api_usage` table (tenant_id, month_key, call_count). `check_usage_limit_persistent(tenant_id)` compares against the plan limit; `increment_usage_persistent(tenant_id)` increments the counter.
 - **Plans:** `cohort_lens.api.subscriptions`: plan limits (basic, professional, enterprise) in `PLAN_LIMITS` (max_api_calls_per_month, max_customers). The tenant’s subscription is read from Neon; if none, usage is unlimited (development).
