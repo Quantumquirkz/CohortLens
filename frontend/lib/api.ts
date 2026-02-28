@@ -18,16 +18,42 @@ import type {
   ConsentRegisterResponse,
   ConsentResponse,
 } from "./types";
+import { getToken, clearToken } from "./auth";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
+/**
+ * Build headers for authenticated API requests.
+ * Automatically includes the Bearer token from localStorage when available.
+ */
 function apiHeaders(): HeadersInit {
-  return { "Content-Type": "application/json" };
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const token = getToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+/**
+ * Build headers for authenticated requests without JSON content type.
+ */
+function authHeaders(): HeadersInit {
+  const headers: Record<string, string> = {};
+  const token = getToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
+    // If we get a 401, clear the stored token so the user is redirected to login
+    if (res.status === 401) {
+      clearToken();
+    }
     const body = await res.json().catch(() => ({})) as { detail?: string | { msg?: string }[] };
     let message = `Request failed (${res.status})`;
     if (typeof body.detail === "string") message = body.detail;
@@ -61,7 +87,9 @@ export async function postToken(username: string, password: string): Promise<Tok
 }
 
 export async function getHealth(): Promise<HealthResponse> {
-  const res = await fetch(`${BASE_URL}/api/v1/health`);
+  const res = await fetch(`${BASE_URL}/api/v1/health`, {
+    headers: authHeaders(),
+  });
   return handleResponse<HealthResponse>(res);
 }
 
@@ -94,7 +122,7 @@ export async function getExplain(
   if (params.profession) sp.set("profession", params.profession);
   const res = await fetch(
     `${BASE_URL}/api/v1/predict-spending/explain?${sp.toString()}`,
-    { headers: apiHeaders() }
+    { headers: authHeaders() }
   );
   return handleResponse<ExplainResponse>(res);
 }

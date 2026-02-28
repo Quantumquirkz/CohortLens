@@ -64,19 +64,20 @@ def get_audit_log(
     table_name: Optional[str] = None,
     record_id: Optional[str] = None,
     limit: int = 100,
-) -> list[dict]:
+    offset: int = 0,
+) -> dict:
     """
-    Retrieve audit log entries, optionally filtered by table and/or record.
+    Retrieve audit log entries with pagination, optionally filtered by table and/or record.
 
     Returns:
-        List of audit log entries as dicts.
+        Dict with 'entries' list, 'total' count, 'limit', and 'offset'.
     """
     try:
         engine = get_engine()
         create_schema(engine)
 
         conditions = []
-        params: dict[str, Any] = {"limit": limit}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if table_name:
             conditions.append("table_name = :table_name")
             params["table_name"] = table_name
@@ -85,13 +86,22 @@ def get_audit_log(
             params["record_id"] = record_id
 
         where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+        # Get total count
+        count_params = {k: v for k, v in params.items() if k not in ("limit", "offset")}
+        count_query = text(f"SELECT COUNT(*) FROM audit_log {where}")
+        total = 0
+
         query = text(
             f"SELECT id, table_name, record_id, action, old_values, new_values, user_id, created_at "
-            f"FROM audit_log {where} ORDER BY created_at DESC LIMIT :limit"
+            f"FROM audit_log {where} ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
         )
         with engine.connect() as conn:
+            total_row = conn.execute(count_query, count_params).fetchone()
+            total = total_row[0] if total_row else 0
+
             rows = conn.execute(query, params).fetchall()
-            return [
+            entries = [
                 {
                     "id": row[0],
                     "table_name": row[1],
@@ -104,6 +114,7 @@ def get_audit_log(
                 }
                 for row in rows
             ]
+            return {"entries": entries, "total": total, "limit": limit, "offset": offset}
     except Exception as e:
         logger.warning("Failed to read audit log: %s", e)
-        return []
+        return {"entries": [], "total": 0, "limit": limit, "offset": offset}
