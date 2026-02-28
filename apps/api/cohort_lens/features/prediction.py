@@ -1,5 +1,5 @@
 """Spending prediction with LinearRegression, RandomForest, AutoGluon, and cross-validation."""
-from typing import Tuple, Dict, Optional, List, Any
+from typing import Tuple, Dict, Optional, Any
 
 import numpy as np
 import pandas as pd

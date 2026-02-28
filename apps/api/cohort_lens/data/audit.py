@@ -1,7 +1,6 @@
 """Audit log for tracking all CRUD operations in CohortLens."""
 
 import json
-from datetime import datetime
 from typing import Any, Optional
 
 from sqlalchemy import text

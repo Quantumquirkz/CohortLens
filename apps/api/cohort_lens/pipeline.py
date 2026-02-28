@@ -24,7 +24,6 @@ def run_pipeline(
     from cohort_lens.features import fit_segments, train_predictor
     from cohort_lens.insights import (
         compute_savings_metrics,
-        generate_segment_recommendations,
         compute_correlation_matrix,
     )
     from cohort_lens.visualization.plots import (

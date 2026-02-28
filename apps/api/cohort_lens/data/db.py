@@ -1,6 +1,5 @@
 """Neon DB (PostgreSQL) abstraction layer for CohortLens."""
 
-from pathlib import Path
 from typing import Optional
 
 import pandas as pd
