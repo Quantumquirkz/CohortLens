@@ -9,8 +9,11 @@
     "dev:mobile": "pnpm --filter @cohortlens/mobile dev",
     "build": "pnpm run build --recursive",
     "lint": "pnpm run lint --recursive",
+    "test": "pnpm --filter @cohortlens/api-ts test:e2e",
     "validate:no-regression": "node scripts/validate-no-regression.js",
     "validate:no-regression:local": "node scripts/validate-no-regression.js --api-v1=http://127.0.0.1:8000 --api-v2=http://127.0.0.1:8001",
+    "perf:baseline": "node scripts/performance-baseline.js",
+    "perf:baseline:local": "node scripts/performance-baseline.js --api=http://127.0.0.1:8001 --duration=30 --concurrent=10",
     "prisma:generate": "pnpm --filter @cohortlens/api-ts prisma:generate"
   },
   "devDependencies": {
