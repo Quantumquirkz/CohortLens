@@ -7,12 +7,16 @@ CohortLens is a monorepo: frontend (Next.js) and API (FastAPI) in one repo, read
 ```
 apps/web/     → Next.js 14+ (Vercel). Login, dashboard, segments, predictions, reports.
 apps/api/     → FastAPI + cohort_lens package. REST, GraphQL, auth, plan limits.
+apps/mobile/  → Expo Router (React Native + react-native-web), new unified client target.
+apps/api-ts/  → NestJS + Prisma + Neon, new /api/v2 backend target.
 packages/     → ui, config, types (shared between web and API).
+packages/contracts/ → Shared Zod contracts + API client (v2).
 config/       → config.yaml (paths, models, reporting).
 ```
 
 - **Web:** Routes under `app/(auth)` and `app/(dashboard)`. Calls go to the backend via API.
 - **API:** `main.py` exposes the FastAPI app. Business logic lives in `apps/api/cohort_lens/`.
+- **Migration target:** `/api/v2/*` in `apps/api-ts` with a shared contracts package consumed by `apps/mobile`.
 
 ## Data flow (backend)
 

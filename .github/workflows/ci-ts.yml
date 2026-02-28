@@ -1,0 +1,27 @@
+name: CI TypeScript
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable pnpm
+        run: |
+          npm install -g pnpm@8
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Prisma generate
+        run: pnpm --filter @cohortlens/api-ts prisma:generate
+      - name: Typecheck contracts
+        run: pnpm --filter @cohortlens/contracts lint
+      - name: Typecheck api-ts
+        run: pnpm --filter @cohortlens/api-ts lint

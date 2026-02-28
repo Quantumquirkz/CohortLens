@@ -1,5 +1,7 @@
 # CohortLens Web (Next.js 14+)
 
+> Legacy scaffold. No new feature work. The migration target client is `apps/mobile`.
+
 Frontend for the CohortLens platform. **Frontend implementation is done separately;** this folder keeps the agreed structure for Vercel and the monorepo.
 
 ## Structure

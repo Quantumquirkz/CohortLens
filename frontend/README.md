@@ -1,5 +1,7 @@
 # CohortLens Frontend
 
+> Legacy client during migration. New feature development moves to `apps/mobile` (Expo React Native).
+
 Next.js dashboard for the CohortLens API (predict, segment, recommendations, drift, reports, audit).
 
 ## Prerequisites

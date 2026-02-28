@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @cohortlens/web dev",
+    "dev": "pnpm --filter @cohortlens/mobile dev",
+    "dev:web": "pnpm --filter @cohortlens/web dev",
+    "dev:api-ts": "pnpm --filter @cohortlens/api-ts dev",
+    "dev:mobile": "pnpm --filter @cohortlens/mobile dev",
     "build": "pnpm run build --recursive",
-    "lint": "pnpm run lint --recursive"
+    "lint": "pnpm run lint --recursive",
+    "prisma:generate": "pnpm --filter @cohortlens/api-ts prisma:generate"
   },
   "devDependencies": {
     "turbo": "^2.0.0"

@@ -103,7 +103,10 @@ Monorepo: frontend in `apps/web/` (Next.js 14+, Vercel) and backend in `apps/api
 ├── apps/
 │   ├── web/          # Next.js 14+ (frontend; implementation separate)
 │   └── api/          # FastAPI + cohort_lens package
+│   ├── mobile/       # Expo React Native app (new unified client target)
+│   └── api-ts/       # NestJS + Prisma backend (/api/v2)
 ├── packages/         # ui, config, types (shared)
+│   └── contracts/    # zod contracts + API client shared by mobile/web
 ├── config/
 ├── scripts/
 ├── tests/unit/
@@ -115,6 +118,7 @@ Monorepo: frontend in `apps/web/` (Next.js 14+, Vercel) and backend in `apps/api
 
 - [What is CohortLens (product and SaaS)](docs/product.md)
 - [Architecture](docs/architecture.md)
+- [v1→v2 migration matrix](docs/migration-v1-v2.md)
 - [Deployment](docs/deployment.md)
 - [Backend step by step](docs/backend.md) – entry points, config, data, segmentation, prediction, API, auth, usage, pipeline
 

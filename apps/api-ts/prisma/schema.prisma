@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NEON_DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  username       String    @unique @db.VarChar(100)
+  email          String    @unique @db.VarChar(255)
+  hashedPassword String    @map("hashed_password") @db.VarChar(255)
+  isActive       Boolean   @default(true) @map("is_active")
+  isAdmin        Boolean   @default(false) @map("is_admin")
+  tenantId       String?   @map("tenant_id") @db.VarChar(100)
+  lastLogin      DateTime? @map("last_login") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("users")
+}
+
+model Customer {
+  id             Int       @id @default(autoincrement())
+  customerId     String    @map("customer_id") @unique @db.VarChar(50)
+  gender         String?   @db.VarChar(20)
+  age            Int?
+  annualIncome   Decimal   @map("annual_income") @db.Decimal(12, 2)
+  spendingScore  Int?      @map("spending_score")
+  profession     String?   @db.VarChar(100)
+  workExperience Int?      @map("work_experience")
+  familySize     Int?      @map("family_size")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@map("customers")
+}
+
+model Prediction {
+  id                Int      @id @default(autoincrement())
+  customerId        String   @map("customer_id") @db.VarChar(50)
+  predictedSpending Decimal  @map("predicted_spending") @db.Decimal(10, 2)
+  modelVersion      String?  @map("model_version") @db.VarChar(50)
+  featuresSnapshot  String?  @map("features_snapshot")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("predictions")
+}
+
+model Segment {
+  id           Int      @id @default(autoincrement())
+  customerId   String   @map("customer_id") @db.VarChar(50)
+  cluster      Int
+  modelVersion String?  @map("model_version") @db.VarChar(50)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("segments")
+}
+
+model ApiUsage {
+  id         Int      @id @default(autoincrement())
+  tenantId   String   @map("tenant_id") @db.VarChar(100)
+  monthKey   String   @map("month_key") @db.VarChar(7)
+  callCount  Int      @default(0) @map("call_count")
+  lastCalled DateTime @default(now()) @map("last_called_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, monthKey])
+  @@map("api_usage")
+}
+
+model Subscription {
+  id                   Int       @id @default(autoincrement())
+  tenantId             String    @map("tenant_id") @db.VarChar(100)
+  plan                 String    @db.VarChar(50)
+  stripeSubscriptionId String?   @map("stripe_subscription_id") @db.VarChar(255)
+  limits               String?
+  startsAt             DateTime? @map("starts_at") @db.Timestamptz(6)
+  endsAt               DateTime? @map("ends_at") @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("subscriptions")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  tableName  String   @map("table_name") @db.VarChar(100)
+  recordId   String?  @map("record_id") @db.VarChar(100)
+  action     String?  @db.VarChar(20)
+  oldValues  String?  @map("old_values")
+  newValues  String?  @map("new_values")
+  userId     String?  @map("user_id") @db.VarChar(100)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("audit_log")
+}

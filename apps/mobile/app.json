@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "CohortLens",
+    "slug": "cohortlens-mobile",
+    "scheme": "cohortlens",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro"
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
