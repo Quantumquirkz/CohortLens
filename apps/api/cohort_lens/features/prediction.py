@@ -1,5 +1,5 @@
 """Spending prediction with LinearRegression, RandomForest, AutoGluon, and cross-validation."""
-from typing import Tuple, Dict, Optional, List, Any
+from typing import Tuple, Dict, Optional, Any
 
 import numpy as np
 import pandas as pd
@@ -16,10 +16,16 @@ logger = get_logger(__name__)
 
 
 def _try_autogluon(X: pd.DataFrame, y: pd.Series, time_limit: int = 30):
-    """Use AutoGluon if available. Returns (model, metrics) or None."""
+    """Use AutoGluon if available. Returns (model, metrics) or None.
+    
+    NOTE: AutoGluon is an EXPERIMENTAL feature and requires the autogluon package
+    to be installed separately. It is not included in the default dependencies.
+    When unavailable, the system falls back to linear_regression.
+    """
     try:
         import autogluon.tabular as ag
     except ImportError:
+        logger.info("AutoGluon not installed. Install with: pip install autogluon")
         return None
     train_data = X.copy()
     train_data["target"] = y.values
@@ -38,17 +44,21 @@ def _try_autogluon(X: pd.DataFrame, y: pd.Series, time_limit: int = 30):
 
 def _try_lstm(X: pd.DataFrame, y: pd.Series) -> Optional[Tuple[object, Dict[str, float]]]:
     """
-    LSTM/Transformer stub for time-series or sequence prediction.
+    LSTM/Transformer for time-series or sequence prediction.
     Returns (model, metrics) or None if not implemented or dependencies missing.
+
+    NOTE: LSTM is currently EXPERIMENTAL and NOT FULLY IMPLEMENTED.
+    This requires PyTorch and a proper sequence construction pipeline.
+    The config option is reserved for future implementation.
+    When selected, the system falls back to linear_regression.
     """
     try:
-        import torch
+        import torch  # noqa: F401
     except ImportError:
-        logger.debug("PyTorch not installed, LSTM unavailable")
+        logger.info("PyTorch not installed. LSTM requires: pip install torch")
         return None
-    # Stub: full LSTM would require sequence construction and training loop.
-    # Config option is available for future implementation.
-    logger.warning("LSTM algorithm is a stub; falling back to linear_regression")
+    # Not yet implemented: full LSTM requires sequence construction and training loop.
+    logger.warning("LSTM algorithm is experimental and not yet implemented; falling back to linear_regression")
     return None
 
 

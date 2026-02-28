@@ -1,7 +1,6 @@
 """Customer segmentation with KMeans and silhouette-based k selection."""
 from typing import Tuple, Optional
 
-import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans, DBSCAN
 from sklearn.mixture import GaussianMixture

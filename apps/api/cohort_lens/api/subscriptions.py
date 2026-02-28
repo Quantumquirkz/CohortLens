@@ -1,7 +1,6 @@
 """Subscription and plan limits for SaaS model."""
 
 import json
-import os
 from datetime import datetime
 from typing import Any, Optional
 

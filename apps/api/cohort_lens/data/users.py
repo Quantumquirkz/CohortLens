@@ -1,7 +1,6 @@
 """User management with Neon DB persistence."""
 
-from datetime import datetime
-from typing import Optional, Any
+from typing import Optional
 
 from sqlalchemy import text
 

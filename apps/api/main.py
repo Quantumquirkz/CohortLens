@@ -5,4 +5,4 @@ Usage:
   From apps/api/:  uvicorn main:app --host 0.0.0.0 --port 8000
   Or via CLI:      cohortlens serve --host 0.0.0.0 --port 8000
 """
-from cohort_lens.api.rest_api import app
+from cohort_lens.api.rest_api import app  # noqa: F401

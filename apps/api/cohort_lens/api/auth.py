@@ -1,6 +1,7 @@
 """JWT authentication for CohortLens API."""
 
 import os
+import secrets
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -9,10 +10,21 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2Pas
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-# Configuration from env
-JWT_SECRET = os.environ.get("JWT_SECRET", "cohortlens-dev-secret-change-in-production")
+# Configuration from env — generate a random secret if none is set (dev safety net)
+_default_secret = os.environ.get("JWT_SECRET", "")
+if not _default_secret or _default_secret == "cohortlens-dev-secret-change-in-production":
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "JWT_SECRET is not set or is the insecure default. "
+        "A random secret has been generated for this process. "
+        "Set JWT_SECRET in your environment for production use."
+    )
+    _default_secret = secrets.token_urlsafe(64)
+
+JWT_SECRET = _default_secret
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MINUTES = int(os.environ.get("JWT_EXPIRE_MINUTES", "60"))
+JWT_REFRESH_EXPIRE_DAYS = int(os.environ.get("JWT_REFRESH_EXPIRE_DAYS", "7"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/token", auto_error=False)
@@ -23,8 +35,24 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     """Create a JWT access token."""
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=JWT_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def create_refresh_token(data: dict) -> str:
+    """Create a JWT refresh token with longer expiry."""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=JWT_REFRESH_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def verify_refresh_token(token: str) -> Optional[dict]:
+    """Verify a refresh token and return payload or None."""
+    payload = verify_token(token)
+    if payload and payload.get("type") == "refresh":
+        return payload
+    return None
 
 
 def verify_token(token: str) -> Optional[dict]:
@@ -78,28 +106,53 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def get_default_user_hash() -> str:
-    """Default dev user hash (admin/admin). Override in production."""
-    # Note: password is 'admin' by default
-    return pwd_context.hash(os.environ.get("DEFAULT_USER_PASSWORD", "admin"))
+    """Default dev user hash. Override DEFAULT_USER_PASSWORD in production."""
+    default_pw = os.environ.get("DEFAULT_USER_PASSWORD", "")
+    if not default_pw:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "DEFAULT_USER_PASSWORD is not set. Default dev login is disabled. "
+            "Set DEFAULT_USER_PASSWORD env var or register a user via /api/v1/auth/register."
+        )
+        # Return a hash that will never match any password input
+        return pwd_context.hash(secrets.token_urlsafe(32))
+    return pwd_context.hash(default_pw)
 
 
 def authenticate_user(username: str, password: str) -> Optional[dict]:
     """Authenticate user against DB or dev fallback."""
     from cohort_lens.data.users import get_user_by_username, update_last_login
-    
+
+    # 1. Try DB-backed user lookup
     user = get_user_by_username(username)
-    if not user:
-        # Dev fallback
-        default_user = os.environ.get("DEFAULT_AUTH_USER", "admin")
-        if username == default_user:
-            if verify_password(password, get_default_user_hash()):
-                return {"username": username, "tenant_id": username, "is_admin": True}
-        return None
-    
-    if not user.get("is_active", True):
-        return None
-        
-    if verify_password(password, user["hashed_password"]):
-        update_last_login(username)
-        return user
+    if user and user.get("is_active", True):
+        hashed = user.get("hashed_password")
+        if isinstance(hashed, str):
+            try:
+                if verify_password(password, hashed):
+                    update_last_login(username)
+                    return user
+            except Exception:
+                pass  # Fall through to dev fallback
+
+    # 2. Dev fallback — only active when DEFAULT_USER_PASSWORD is explicitly set
+    default_user = os.environ.get("DEFAULT_AUTH_USER", "admin")
+    default_pw = os.environ.get("DEFAULT_USER_PASSWORD", "")
+    if default_pw and username == default_user:
+        if verify_password(password, get_default_user_hash()):
+            return {"username": username, "tenant_id": username, "is_admin": True}
+
+    return None
+
+
+def validate_password_strength(password: str) -> Optional[str]:
+    """Validate password meets minimum security requirements. Returns error message or None."""
+    if len(password) < 8:
+        return "Password must be at least 8 characters long"
+    if not any(c.isupper() for c in password):
+        return "Password must contain at least one uppercase letter"
+    if not any(c.islower() for c in password):
+        return "Password must contain at least one lowercase letter"
+    if not any(c.isdigit() for c in password):
+        return "Password must contain at least one digit"
     return None

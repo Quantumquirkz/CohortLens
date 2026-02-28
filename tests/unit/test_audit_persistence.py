@@ -42,24 +42,31 @@ class TestGetAuditLog:
     @patch("cohort_lens.data.audit.get_engine")
     @patch("cohort_lens.data.audit.create_schema")
     def test_get_audit_log_empty(self, mock_schema, mock_engine):
-        """get_audit_log should return empty list when no entries."""
+        """get_audit_log should return empty entries when no entries."""
         mock_conn = MagicMock()
-        mock_conn.execute.return_value.fetchall.return_value = []
+        # First execute call returns count, second returns entries
+        count_result = MagicMock()
+        count_result.fetchone.return_value = (0,)
+        entries_result = MagicMock()
+        entries_result.fetchall.return_value = []
+        mock_conn.execute.side_effect = [count_result, entries_result]
         mock_engine.return_value.connect.return_value.__enter__ = lambda s: mock_conn
         mock_engine.return_value.connect.return_value.__exit__ = MagicMock(return_value=False)
 
         from cohort_lens.data.audit import get_audit_log
 
         result = get_audit_log()
-        assert result == []
+        assert result["entries"] == []
+        assert result["total"] == 0
 
     @patch("cohort_lens.data.audit.get_engine", side_effect=Exception("DB unavailable"))
     def test_get_audit_log_failure(self, mock_engine):
-        """get_audit_log should return empty list on DB failure."""
+        """get_audit_log should return empty entries on DB failure."""
         from cohort_lens.data.audit import get_audit_log
 
         result = get_audit_log()
-        assert result == []
+        assert result["entries"] == []
+        assert result["total"] == 0
 
 
 class TestPersistence:
