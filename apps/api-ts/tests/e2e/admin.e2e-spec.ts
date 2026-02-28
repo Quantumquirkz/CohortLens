@@ -18,6 +18,10 @@ describe('Admin Controller - Feature Flag Management (e2e)', () => {
       $connect: async () => {},
       $queryRaw: async () => [] as any,
       user: { findUnique: async () => null },
+      featureFlagRecord: {
+        findMany: async () => [],
+        upsert: async () => ({}),
+      },
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({

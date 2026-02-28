@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -7,7 +8,25 @@ import { CommonModule } from './common/common.module';
 import { FeatureFlagMiddleware } from './common/feature-flag.middleware';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, AnalyticsModule, CommonModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000,
+        limit: 1000,
+      },
+      {
+        name: 'auth',
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
+    PrismaModule,
+    AuthModule,
+    AnalyticsModule,
+    CommonModule,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

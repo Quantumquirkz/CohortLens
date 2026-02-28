@@ -26,7 +26,7 @@ export declare class AnalyticsService {
     usage(tenantId: string): Promise<{
         tenant_id: string;
         month_key: string;
-        current_month_calls: any;
+        current_month_calls: number;
         limit: number;
     }>;
     private confidenceFromScore;

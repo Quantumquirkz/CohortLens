@@ -9,15 +9,41 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const throttler_1 = require("@nestjs/throttler");
 const auth_module_1 = require("./auth/auth.module");
 const analytics_module_1 = require("./analytics/analytics.module");
 const prisma_module_1 = require("./prisma/prisma.module");
+const common_module_1 = require("./common/common.module");
+const feature_flag_middleware_1 = require("./common/feature-flag.middleware");
 let AppModule = class AppModule {
+    configure(consumer) {
+        consumer
+            .apply(feature_flag_middleware_1.FeatureFlagMiddleware)
+            .forRoutes('/api/v2/*');
+    }
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), prisma_module_1.PrismaModule, auth_module_1.AuthModule, analytics_module_1.AnalyticsModule],
+        imports: [
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            throttler_1.ThrottlerModule.forRoot([
+                {
+                    name: 'default',
+                    ttl: 60000,
+                    limit: 1000,
+                },
+                {
+                    name: 'auth',
+                    ttl: 60000,
+                    limit: 10,
+                },
+            ]),
+            prisma_module_1.PrismaModule,
+            auth_module_1.AuthModule,
+            analytics_module_1.AnalyticsModule,
+            common_module_1.CommonModule,
+        ],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

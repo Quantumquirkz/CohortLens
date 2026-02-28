@@ -14,8 +14,11 @@ describe('Auth Endpoint (e2e)', () => {
     const prismaStub: any = {
       $connect: async () => {},
       $queryRaw: async () => [] as any,
-      // support user lookup for auth validation
       user: { findUnique: async () => null },
+      featureFlagRecord: {
+        findMany: async () => [],
+        upsert: async () => ({}),
+      },
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({

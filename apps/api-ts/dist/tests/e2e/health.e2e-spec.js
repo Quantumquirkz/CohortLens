@@ -1,15 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const testing_1 = require("@nestjs/testing");
+process.env.FEATURE_FLAG_V2_ENABLED = 'true';
 const common_1 = require("@nestjs/common");
 const request = require("supertest");
 const app_module_1 = require("../../src/app.module");
+const prisma_service_1 = require("../../src/prisma/prisma.service");
 describe('Health Endpoint (e2e)', () => {
     let app;
     beforeAll(async () => {
+        const prismaStub = {
+            $connect: async () => { },
+            $queryRaw: async () => [],
+            featureFlagRecord: {
+                findMany: async () => [],
+                upsert: async () => ({}),
+            },
+        };
         const moduleFixture = await testing_1.Test.createTestingModule({
             imports: [app_module_1.AppModule],
-        }).compile();
+        })
+            .overrideProvider(prisma_service_1.PrismaService)
+            .useValue(prismaStub)
+            .compile();
         app = moduleFixture.createNestApplication();
         app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
         await app.init();

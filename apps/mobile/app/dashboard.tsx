@@ -230,7 +230,3 @@ const styles = StyleSheet.create({
     color: '#0066cc',
   },
 });
-
-    gap: 8,
-  },
-});

@@ -95,3 +95,12 @@ model AuditLog {
 
   @@map("audit_log")
 }
+
+model FeatureFlagRecord {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("feature_flags")
+}

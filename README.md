@@ -1,136 +1,331 @@
-# CodeCrafters United - CohortLens
+# CohortLens
 
-<p align="center">
-  <img src="https://github.com/Jhuomar-Barria/CodeCrafters-United/assets/124087234/47b596cc-1d13-48e3-a037-25b02a846265" alt="CodeCrafters United">
-</p>
+**CohortLens** is a modular CRM analytics web platform that transforms customer data into actionable decisions. It provides customer segmentation, spending prediction, AI-powered recommendations, data drift monitoring, audit logging, consent management (SSI/Web3), and executive report generation — all in a unified web interface.
 
-A modular CRM analytics platform for customer segmentation, spending prediction, and actionable insights. AI-powered natural-language recommendations use **Groq** as the LLM. Transform customer data into decisions with reproducible pipelines, REST APIs, and executive reports.
+> Project stewardship: [Jhuomar Boskoll Quintero](https://www.linkedin.com/in/jhuomar/)  
+> Team: **CodeCrafters United**
 
-> **Note:** This project was previously known as **CRM Navigator**. Project stewardship is now under [Jhuomar Boskoll Quintero](https://www.linkedin.com/in/jhuomar/).
+---
 
-## Installation
+## Architecture Overview
 
-### Prerequisites
+CohortLens is a **pnpm monorepo** orchestrated by **Turborepo**, composed of two active applications and a shared contracts package.
 
-- Python 3.9+
-- Node 18+ and pnpm (for the frontend)
-- pip
+```
+CohortLens/
+├── apps/
+│   ├── api-ts/         # NestJS REST API — port 8001
+│   └── web/            # React + Express + Vite web app — port 5000
+├── packages/
+│   └── contracts/      # Zod schemas + typed API client (shared)
+├── deployment/         # Dockerfile + docker-compose
+└── docs/               # Architecture, backend, product, deployment docs
+```
 
-### Step by step
+```mermaid
+flowchart TD
+    browser["Browser\n(React SPA)"]
+    webServer["apps/web\n(Express + Vite :5000)"]
+    api["apps/api-ts\n(NestJS :8001)"]
+    contracts["packages/contracts"]
+    db[("Neon PostgreSQL")]
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Jhuomar-Barria/CodeCrafters-United.git
-   cd CodeCrafters-United
-   ```
+    browser -->|HTTP| webServer
+    webServer -->|DATABASE_URL| db
+    api -->|DATABASE_URL| db
+    contracts --> api
+```
 
-2. **Virtual environment and install API (backend)**  
-   On Debian/Ubuntu (or if you see `externally-managed-environment`), **do not** use system `pip`; use a venv.
+---
 
-   **From repo root** (`CohortLens/`):
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate   # Windows: .venv\Scripts\activate
-   pip install -r apps/api/requirements.txt
-   pip install -e apps/api
-   ```
+## Stack
 
-   **From `apps/api/`** (if you already `cd`’d there):
-   ```bash
-   pip install -r requirements.txt
-   pip install -e .
-   ```
+### `apps/web` — Web Application
 
-   **Or** run the API with a one-liner from repo root (creates/uses `.venv`):
-   ```bash
-   ./scripts/serve-api.sh
-   ```
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js + TypeScript (`tsx`) |
+| Server | Express 5 |
+| Bundler | Vite 7 |
+| UI Framework | React 18 |
+| Router | Wouter |
+| Components | shadcn/ui (Radix UI primitives) |
+| Styles | Tailwind CSS 3 |
+| Data Fetching | TanStack Query v5 |
+| Forms | React Hook Form + Zod |
+| Charts | Recharts |
+| Icons | Lucide React |
+| ORM | Drizzle ORM + Neon Serverless |
+| Themes | Light / Dark (pure black) |
 
-3. **Frontend (optional)**
-   ```bash
-   pnpm install
-   pnpm --filter @cohortlens/web dev
-   ```
-   The web app lives in `apps/web/`; frontend implementation is done separately.
+### `apps/api-ts` — Backend API
 
-4. **Data**
-   - Download [Customers Dataset](https://www.kaggle.com/datasets/datascientistanna/customers-dataset)
-   - Place `Customers.csv` in `data/raw/`
+| Layer | Technology |
+|---|---|
+| Framework | NestJS 10 |
+| Language | TypeScript 5 (strict) |
+| ORM | Prisma 6 + Neon PostgreSQL |
+| Auth | JWT (HS256) via `@nestjs/passport` |
+| Rate Limiting | `@nestjs/throttler` (1000 req/min general, 10 req/min auth) |
+| AI | Groq API (`llama-3.3-70b`) with rule-based fallback |
+| Docs | Swagger/OpenAPI at `/api/v2/docs` |
+| Tests | Jest + Supertest (53 e2e tests) |
 
-5. **Environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env as needed
-   ```
+### `packages/contracts` — Shared
+
+Zod validation schemas and a typed API client shared between apps.
+
+---
+
+## Features
+
+| Module | Description |
+|---|---|
+| **Dashboard** | System health, DB status, IPFS node, and monthly API usage overview |
+| **Spending Predictor** | XGBoost-based model predicts customer spending score from demographics |
+| **Customer Segmentation** | K-Means clustering (k=3) with interactive scatter chart visualization |
+| **AI Recommendations** | Chat interface powered by Groq LLM for natural-language cohort queries |
+| **Data Drift Monitor** | PSI + Kolmogorov-Smirnov tests to detect feature distribution shifts vs. baseline |
+| **Report Generator** | PDF/CSV/JSON reports with optional IPFS pinning for immutable storage |
+| **Audit Log** | Immutable, searchable record of all system actions and data changes |
+| **Consent Registry** | Self-Sovereign Identity (SSI/DID) based consent management and verification |
+| **Web3 Infrastructure** | IPFS storage, zero-knowledge identity, and data tokenization engine |
+| **API Usage** | Per-tenant monthly call tracking and quota monitoring |
+
+---
 
 ## Quick Start
 
-```bash
-cohortlens run
-```
+### Prerequisites
 
-Loads data, segments customers, trains the predictor, and generates the report. Or run the API (with venv): `./scripts/serve-api.sh`, or after activating `.venv`: `cohortlens serve --host 0.0.0.0 --port 8000` / `cd apps/api && uvicorn main:app --reload`.
+- Node.js 20+
+- pnpm 8+
+- A [Neon](https://neon.tech) PostgreSQL database
 
-## Usage
-
-### CLI
+### Installation
 
 ```bash
-cohortlens run                    # Full pipeline
-cohortlens segment --data-path data/raw/Customers.csv
-cohortlens predict
-cohortlens report --output reports/executive_report.html
-cohortlens serve                  # Start REST API
-streamlit run scripts/dashboard.py  # Start dashboard
+git clone https://github.com/Jhuomar-Barria/CodeCrafters-United.git
+cd CohortLens
+pnpm install
 ```
 
-### Python API
+### Web App (React + Express)
 
-```python
-from cohort_lens.data import load_customers, clean_customers
-from cohort_lens.features import fit_segments, train_predictor
+```bash
+# Copy and configure environment variables
+cp .env.example apps/web/.env
+# Edit apps/web/.env: set DATABASE_URL (optional — mock data used if absent)
 
-df = load_customers()
-df = clean_customers(df)
-df_segmented, model, scaler = fit_segments(df, n_clusters=6)
+# Start development server (port 5000)
+pnpm dev:web
 ```
 
-## Project structure
+Open `http://localhost:5000` in your browser.
 
-Monorepo: frontend in `apps/web/` (Next.js 14+, Vercel) and backend in `apps/api/` (FastAPI).
+### Backend API (NestJS)
+
+```bash
+# Copy and configure environment variables
+cp apps/api-ts/.env.example apps/api-ts/.env
+# Edit .env: set NEON_DATABASE_URL, JWT_SECRET, GROQ_API_KEY
+
+# Generate Prisma client
+pnpm prisma:generate
+
+# Run database migrations
+pnpm prisma:migrate
+
+# Start development server (port 8001)
+pnpm dev:api
+```
+
+Swagger docs available at `http://localhost:8001/api/v2/docs`.
+
+### Run both apps simultaneously
+
+```bash
+# Terminal 1 — Web app
+pnpm dev:web
+
+# Terminal 2 — API
+pnpm dev:api
+```
+
+### Build for production
+
+```bash
+pnpm build        # Build all apps via Turborepo
+pnpm build:web    # Build web app only
+```
+
+---
+
+## Environment Variables
+
+### `apps/web/.env`
+
+| Variable | Description | Required |
+|---|---|---|
+| `DATABASE_URL` | Neon PostgreSQL connection string | No (mock data used if absent) |
+| `PORT` | Web server port | Default: `5000` |
+
+### `apps/api-ts/.env`
+
+| Variable | Description | Required |
+|---|---|---|
+| `NEON_DATABASE_URL` | PostgreSQL connection string (Neon) | Yes |
+| `JWT_SECRET` | JWT signing secret | Yes |
+| `GROQ_API_KEY` | Groq LLM API key | No (rule-based fallback) |
+| `FEATURE_FLAG_V2_ENABLED` | Enable v2 API globally | Default: `false` |
+| `FEATURE_FLAG_V2_PRIMARY` | Route all traffic to v2 | Default: `false` |
+| `FEATURE_FLAG_V1_DEPRECATED` | Return 410 Gone for v1 endpoints | Default: `false` |
+| `SKIP_DB` | Skip DB connection for local dev | Default: `false` |
+| `PORT` | API server port | Default: `8001` |
+
+---
+
+## API Endpoints
+
+### `apps/api-ts` — NestJS REST API
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/v2/auth/token` | — | Get JWT token |
+| GET | `/api/v2/health` | — | Service health check |
+| GET | `/api/v2/usage` | JWT | API usage for current tenant |
+| POST | `/api/v2/predict-spending` | JWT | Predict customer spending score |
+| POST | `/api/v2/segment` | JWT | Segment customers (K-Means) |
+| POST | `/api/v2/recommendations/natural` | JWT | AI recommendations (Groq LLM) |
+| GET | `/api/v2/admin/flags` | — | Get feature flag state |
+| POST | `/api/v2/admin/flags` | JWT | Set feature flag |
+| POST | `/api/v2/admin/migrate-to-v2` | JWT | Trigger v2 cutover |
+| POST | `/api/v2/admin/rollback-to-v1` | JWT | Emergency rollback to v1 |
+| POST | `/api/v2/admin/enable-shadow-mode` | JWT | Enable shadow traffic mode |
+
+### `apps/web/server` — Express API
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/health` | Service + DB + IPFS status |
+| GET | `/api/usage` | Tenant monthly call count |
+| POST | `/api/predict` | Spending score prediction |
+| GET | `/api/explain` | Feature importance (SHAP) |
+| POST | `/api/segment` | K-Means cluster assignment |
+| POST | `/api/recommendations` | AI recommendation query |
+| GET | `/api/drift` | Data drift analysis (PSI + KS) |
+| POST | `/api/drift/save` | Save new baseline |
+| POST | `/api/reports` | Generate report (PDF/CSV/JSON) |
+| GET | `/api/audit` | Audit log entries |
+| POST | `/api/consent` | Register consent (SSI) |
+| GET | `/api/consent/:id` | Get consents for a customer DID |
+
+---
+
+## Testing
+
+```bash
+# All tests
+pnpm test
+
+# Backend e2e tests (53 tests)
+pnpm test:api
+
+# TypeScript type checking
+pnpm --filter @cohortlens/api-ts lint
+pnpm --filter @cohortlens/web check
+```
+
+---
+
+## Deployment (Docker)
+
+```bash
+# Build and run the API container
+cd deployment
+docker-compose up --build
+```
+
+The `docker-compose.yml` runs the NestJS API on port `8001` with a health check at `/api/v2/health`. Configure environment variables via a `.env` file at the project root.
+
+```bash
+# Required .env at project root for Docker
+NEON_DATABASE_URL=postgresql://...
+JWT_SECRET=your-secret
+GROQ_API_KEY=gsk_...          # optional
+FEATURE_FLAG_V2_ENABLED=true
+FEATURE_FLAG_V2_PRIMARY=true
+FEATURE_FLAG_V1_DEPRECATED=true
+```
+
+---
+
+## Project Structure (detailed)
 
 ```
-├── apps/
-│   ├── web/          # Next.js 14+ (frontend; implementation separate)
-│   └── api/          # FastAPI + cohort_lens package
-│   ├── mobile/       # Expo React Native app (new unified client target)
-│   └── api-ts/       # NestJS + Prisma backend (/api/v2)
-├── packages/         # ui, config, types (shared)
-│   └── contracts/    # zod contracts + API client shared by mobile/web
-├── config/
-├── scripts/
-├── tests/unit/
-├── deployment/
-└── docs/
+apps/
+├── api-ts/
+│   ├── src/
+│   │   ├── main.ts                  # Bootstrap, CORS, Swagger
+│   │   ├── app.module.ts            # Root module
+│   │   ├── analytics/               # Predict, segment, recommendations
+│   │   ├── auth/                    # JWT auth, guards, strategies
+│   │   ├── common/                  # Admin controller, feature flags
+│   │   └── prisma/                  # Prisma service + module
+│   ├── prisma/
+│   │   ├── schema.prisma            # DB models
+│   │   └── migrations/              # SQL migrations
+│   └── tests/e2e/                   # End-to-end test suites
+│
+└── web/
+    ├── client/
+    │   ├── index.html               # HTML entry point
+    │   └── src/
+    │       ├── App.tsx              # Router + providers
+    │       ├── pages/               # 10 pages (dashboard → usage)
+    │       ├── components/          # Layout + ~40 shadcn/ui components
+    │       ├── hooks/               # use-cohort, use-theme, use-toast
+    │       └── lib/                 # queryClient, utils
+    ├── server/
+    │   ├── index.ts                 # Express server entry point
+    │   ├── routes.ts                # All REST handlers
+    │   ├── storage.ts               # In-memory storage (audit + consent)
+    │   ├── db.ts                    # Neon DB connection (Drizzle)
+    │   └── vite.ts                  # Vite dev middleware
+    └── shared/
+        ├── schema.ts                # Zod schemas for all endpoints
+        └── routes.ts                # Typed route definitions
+
+packages/
+└── contracts/
+    ├── src/schemas.ts               # Shared Zod validation schemas
+    ├── src/client.ts                # Typed API client
+    └── src/index.ts                 # Package exports
 ```
+
+---
 
 ## Documentation
 
-- [What is CohortLens (product and SaaS)](docs/product.md)
 - [Architecture](docs/architecture.md)
-- [v1→v2 migration matrix](docs/migration-v1-v2.md)
+- [Backend](docs/backend.md)
+- [Product](docs/product.md)
 - [Deployment](docs/deployment.md)
-- [Backend step by step](docs/backend.md) – entry points, config, data, segmentation, prediction, API, auth, usage, pipeline
+- [Project Status](docs/PROJECT-STATUS.md)
 
-## Team - CodeCrafters United
+---
+
+## Team — CodeCrafters United
 
 | Role | Name | Profession |
-|------|------|------------|
-| Backend | Cesar Prens | Software Developer and Cybersecurity Technician |
+|---|---|---|
+| Backend | Cesar Prens | Software Developer & Cybersecurity Technician |
 | Backend | Emily Morales | Computer and Systems Engineering |
 | Backend | Jhuomar Barría | Computer and Systems Engineering |
 | Design | Ana Zárate | Industrial Engineering and Medicine |
 | Design | Victoria Vargas | Management Information Systems Engineering |
+
+---
 
 ## License
 

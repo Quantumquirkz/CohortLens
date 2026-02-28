@@ -86,6 +86,14 @@ let AnalyticsService = class AnalyticsService {
         };
     }
     async usage(tenantId) {
+        if (process.env.SKIP_DB === 'true') {
+            return {
+                tenant_id: tenantId,
+                month_key: this.monthKey(),
+                current_month_calls: Math.floor(Math.random() * 500),
+                limit: 1000,
+            };
+        }
         const monthKey = this.monthKey();
         const usage = await this.prisma.apiUsage.findUnique({
             where: {
@@ -111,6 +119,14 @@ let AnalyticsService = class AnalyticsService {
         return 'low';
     }
     async predict(tenantId, input) {
+        if (process.env.SKIP_DB === 'true') {
+            const mockScore = Math.floor(Math.random() * 100);
+            return {
+                predicted_spending: mockScore,
+                confidence: this.confidenceFromScore(mockScore),
+                rule_version: this.ruleVersion,
+            };
+        }
         await this.ensureUsageLimit(tenantId);
         const incomeNormalized = Math.min(1, Math.max(0, input.annual_income / 200000));
         const ageSweetSpot = 1 - Math.min(1, Math.abs(input.age - 38) / 40);
@@ -166,6 +182,12 @@ let AnalyticsService = class AnalyticsService {
         return 5;
     }
     async segment(tenantId, rows) {
+        if (process.env.SKIP_DB === 'true') {
+            return {
+                clusters: rows.map(() => Math.floor(Math.random() * 6)),
+                rule_version: this.ruleVersion,
+            };
+        }
         await this.ensureUsageLimit(tenantId);
         const clusters = rows.map((row) => this.clusterFromInput(row));
         const inserts = rows
@@ -211,6 +233,12 @@ let AnalyticsService = class AnalyticsService {
             .join(' | ');
     }
     async recommendations(tenantId, query) {
+        if (process.env.SKIP_DB === 'true') {
+            return {
+                recommendation: 'Rule-based recommendation: prioritize high-value segments for engagement',
+                source: 'rule_based',
+            };
+        }
         await this.ensureUsageLimit(tenantId);
         const rows = await this.prisma.customer.findMany({
             where: { deletedAt: null },

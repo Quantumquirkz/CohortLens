@@ -1,8 +1,0 @@
-# Build from repo root: docker build -f deployment/Dockerfile .
-FROM python:3.11-slim
-WORKDIR /app
-COPY apps/api/ /app/
-COPY config/ /app/config/
-RUN pip install --no-cache-dir -r requirements.txt && pip install -e .
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -16,6 +16,10 @@ describe('Health Endpoint (e2e)', () => {
     const prismaStub: any = {
       $connect: async () => {},
       $queryRaw: async () => [] as any,
+      featureFlagRecord: {
+        findMany: async () => [],
+        upsert: async () => ({}),
+      },
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({

@@ -21,7 +21,7 @@ export declare class AnalyticsController {
     usage(req: AuthRequest): Promise<{
         tenant_id: string;
         month_key: string;
-        current_month_calls: any;
+        current_month_calls: number;
         limit: number;
     }>;
     predict(req: AuthRequest, body: PredictDto): Promise<{

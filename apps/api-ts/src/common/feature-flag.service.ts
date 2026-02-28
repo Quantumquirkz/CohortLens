@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma/prisma.service';
 
 export enum FeatureFlag {
   /**
@@ -31,13 +32,18 @@ export enum FeatureFlag {
   SHADOW_MODE = 'shadow_mode',
 }
 
-interface FlagState {
+export interface FlagState {
   [key: string]: boolean;
 }
 
 /**
- * Feature flag service for gradual migration control
- * 
+ * Feature flag service for gradual migration control.
+ *
+ * Persistence strategy:
+ * 1. On startup: load from DB (feature_flags table), fallback to FEATURE_FLAG_* env vars.
+ * 2. On setFlag: write to DB immediately; in-memory cache updated for low-latency reads.
+ * 3. If DB is unavailable: falls back to env vars and keeps in-memory state.
+ *
  * Timeline example:
  * Week 1-2: v1=primary, v2_enabled=true (beta testing)
  * Week 2-3: shadow_mode=true (shadow traffic to v2)
@@ -45,18 +51,25 @@ interface FlagState {
  * Week 4+:  v1_deprecated=true, v2_primary=true (cleanup)
  */
 @Injectable()
-export class FeatureFlagService {
+export class FeatureFlagService implements OnModuleInit {
   private flags: FlagState = {};
 
-  constructor(private config: ConfigService) {
-    this.loadFlags();
+  constructor(
+    private config: ConfigService,
+    private prisma: PrismaService,
+  ) {
+    this.loadFlagsFromEnv();
+  }
+
+  async onModuleInit() {
+    await this.loadFlagsFromDb();
   }
 
   /**
-   * Load flags from environment variables
+   * Load flags from environment variables as initial/fallback values.
    * Format: FEATURE_FLAG_V2_PRIMARY=true
    */
-  private loadFlags() {
+  private loadFlagsFromEnv() {
     Object.values(FeatureFlag).forEach(flag => {
       const envKey = `FEATURE_FLAG_${flag.toUpperCase()}`;
       const value = this.config.get<string>(envKey, 'false');
@@ -65,21 +78,49 @@ export class FeatureFlagService {
   }
 
   /**
-   * Check if a feature is enabled
+   * Load flags from DB, overriding env values.
+   * Silently falls back to env values if DB is unavailable.
+   */
+  private async loadFlagsFromDb() {
+    try {
+      const records = await this.prisma.featureFlagRecord.findMany();
+      for (const record of records) {
+        if (Object.values(FeatureFlag).includes(record.name as FeatureFlag)) {
+          this.flags[record.name] = record.enabled;
+        }
+      }
+    } catch {
+      // DB not available (e.g. during tests or first boot) — env values remain active
+    }
+  }
+
+  /**
+   * Check if a feature is enabled (in-memory read, low latency)
    */
   isEnabled(flag: FeatureFlag): boolean {
     return this.flags[flag] ?? false;
   }
 
   /**
-   * Set flag state (admin-only in production)
+   * Set flag state and persist to DB.
+   * Falls back to in-memory only if DB write fails.
    */
-  setFlag(flag: FeatureFlag, enabled: boolean): void {
+  async setFlag(flag: FeatureFlag, enabled: boolean): Promise<void> {
     this.flags[flag] = enabled;
+    try {
+      await this.prisma.featureFlagRecord.upsert({
+        where: { name: flag },
+        create: { name: flag, enabled },
+        update: { enabled },
+      });
+    } catch {
+      // DB write failed — flag updated in memory only; will reset on restart
+      console.warn(`[FeatureFlags] DB write failed for flag "${flag}". Change is in-memory only.`);
+    }
   }
 
   /**
-   * Get all flags
+   * Get all flags (in-memory snapshot)
    */
   getAllFlags(): Readonly<FlagState> {
     return Object.freeze({ ...this.flags });

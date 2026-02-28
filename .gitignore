@@ -1,31 +1,39 @@
-# Environment (secrets)
+# ── Secrets ───────────────────────────────────────────────────────────────────
 .env
 .env.local
+.env.*.local
 
-# Virtual environments
-.venv/
-venv/
-env/
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules/
+dist/
+.next/
+.expo/
+*.tsbuildinfo
 
-# Python
-__pycache__/
-*.egg-info/
-*.py[cod]
-*.pyo
-.pytest_cache/
-.coverage
-htmlcov/
+# ── pnpm ──────────────────────────────────────────────────────────────────────
+.pnpm-store/
 
-# Data (users download from Kaggle)
-data/raw/*.csv
-!data/raw/README.md
+# ── Turbo ─────────────────────────────────────────────────────────────────────
+.turbo/
 
-# IDE
+# ── Prisma ────────────────────────────────────────────────────────────────────
+# Generated client is rebuilt on install
+apps/api-ts/node_modules/.prisma/
+
+# ── Test / Coverage ───────────────────────────────────────────────────────────
+coverage/
+*.lcov
+.nyc_output/
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
 .idea/
 .vscode/
 *.swp
+*.swo
 
-# OS
+# ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
-node_modules
+
+# ── Archive (kept for reference, not deployed) ────────────────────────────────
+_archive/

@@ -6,6 +6,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { SkipThrottle, ThrottlerGuard } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request as ExpressRequest } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -16,10 +17,12 @@ import { RecommendationDto } from './dto/recommendation.dto';
 type AuthRequest = ExpressRequest & { user: { sub: string; tenant_id?: string } };
 
 @ApiTags('analytics')
+@UseGuards(ThrottlerGuard)
 @Controller('/api/v2')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
+  @SkipThrottle()
   @Get('/health')
   health() {
     return this.analyticsService.health();

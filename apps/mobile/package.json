@@ -8,7 +8,21 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "roots": [
+      "<rootDir>/src/__tests__"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!\\.pnpm|(jest-)?react-native|@react-native|expo(nent)?|@expo|react-navigation|@react-navigation|@cohortlens)"
+    ],
+    "moduleNameMapper": {
+      "^@cohortlens/contracts$": "<rootDir>/../../packages/contracts/src/index.ts"
+    }
   },
   "dependencies": {
     "@cohortlens/contracts": "workspace:*",
@@ -26,12 +40,17 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
-    "@babel/preset-environment": "^7.25.0",
+    "@babel/preset-env": "^7.25.0",
     "@babel/preset-react": "^7.25.0",
     "@babel/preset-typescript": "^7.25.0",
+    "@testing-library/react-native": "^12.9.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "jest-expo": "^52.0.5",
     "metro-react-native-babel-transformer": "^0.77.0",
+    "react-test-renderer": "18.3.1",
     "typescript": "^5.7.3"
   }
 }

@@ -9,8 +9,9 @@ interface SetFlagRequest {
 }
 
 /**
- * Admin controller for operational tasks during migration
- * All endpoints require authentication and should be admin-only in production
+ * Admin controller for operational tasks during migration.
+ * Mutation endpoints require JWT authentication.
+ * Read-only endpoints (health, flags GET) are public for monitoring.
  */
 @ApiTags('admin')
 @Controller('/api/v2/admin')
@@ -18,7 +19,7 @@ export class AdminController {
   constructor(private featureFlags: FeatureFlagService) {}
 
   /**
-   * Health check for admin monitoring
+   * Health check for admin monitoring (public, read-only)
    */
   @Get('/health')
   health() {
@@ -29,7 +30,7 @@ export class AdminController {
   }
 
   /**
-   * Get current feature flags state (no auth required for visibility)
+   * Get current feature flags state (public, read-only for visibility)
    */
   @Get('/flags')
   getFlags() {
@@ -40,21 +41,17 @@ export class AdminController {
   }
 
   /**
-   * Set feature flag (admin-only endpoint)
-   * In production, this should verify admin role
+   * Set feature flag (JWT required)
    */
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('/flags')
-  setFlag(@Body() request: SetFlagRequest) {
-    // In production, add: @Roles('admin') decorator
-    // For now, require auth as basic protection
-
+  async setFlag(@Body() request: SetFlagRequest) {
     if (!Object.values(FeatureFlag).includes(request.flag)) {
       throw new HttpException('Invalid flag name', HttpStatus.BAD_REQUEST);
     }
 
-    this.featureFlags.setFlag(request.flag, request.enabled);
+    await this.featureFlags.setFlag(request.flag, request.enabled);
 
     return {
       message: `Flag ${request.flag} set to ${request.enabled}`,
@@ -65,18 +62,14 @@ export class AdminController {
 
   /**
    * Trigger migration cutover (v1 -> v2)
-   * Sets necessary flags for smooth transition
    */
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('/migrate-to-v2')
-  migrateToV2() {
-    // Step 1: Enable v2 as primary
-    this.featureFlags.setFlag(FeatureFlag.V2_PRIMARY, true);
-    // Step 2: Keep v1 active temporarily (for rollback)
-    this.featureFlags.setFlag(FeatureFlag.V1_DEPRECATED, false);
-    // Step 3: Enable shadow logging for tracking
-    this.featureFlags.setFlag(FeatureFlag.MIGRATION_LOGGING, true);
+  async migrateToV2() {
+    await this.featureFlags.setFlag(FeatureFlag.V2_PRIMARY, true);
+    await this.featureFlags.setFlag(FeatureFlag.V1_DEPRECATED, false);
+    await this.featureFlags.setFlag(FeatureFlag.MIGRATION_LOGGING, true);
 
     return {
       message: 'Migration cutover initiated (v2 primary, v1 still available)',
@@ -92,9 +85,9 @@ export class AdminController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('/rollback-to-v1')
-  rollbackToV1() {
-    this.featureFlags.setFlag(FeatureFlag.V2_PRIMARY, false);
-    this.featureFlags.setFlag(FeatureFlag.V1_DEPRECATED, false);
+  async rollbackToV1() {
+    await this.featureFlags.setFlag(FeatureFlag.V2_PRIMARY, false);
+    await this.featureFlags.setFlag(FeatureFlag.V1_DEPRECATED, false);
 
     return {
       message: 'Rollback to v1 completed',
@@ -106,14 +99,13 @@ export class AdminController {
 
   /**
    * Enable shadow mode (dual write without traffic shift)
-   * Useful for validation before cutover
    */
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('/enable-shadow-mode')
-  enableShadowMode() {
-    this.featureFlags.setFlag(FeatureFlag.SHADOW_MODE, true);
-    this.featureFlags.setFlag(FeatureFlag.V2_ENABLED, true);
+  async enableShadowMode() {
+    await this.featureFlags.setFlag(FeatureFlag.SHADOW_MODE, true);
+    await this.featureFlags.setFlag(FeatureFlag.V2_ENABLED, true);
 
     return {
       message: 'Shadow mode enabled (v1 primary, v2 shadows traffic)',
@@ -129,9 +121,9 @@ export class AdminController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('/complete-v1-deprecation')
-  completeV1Deprecation() {
-    this.featureFlags.setFlag(FeatureFlag.V2_PRIMARY, true);
-    this.featureFlags.setFlag(FeatureFlag.V1_DEPRECATED, true);
+  async completeV1Deprecation() {
+    await this.featureFlags.setFlag(FeatureFlag.V2_PRIMARY, true);
+    await this.featureFlags.setFlag(FeatureFlag.V1_DEPRECATED, true);
 
     return {
       message: 'V1 deprecation completed (v1 endpoints returning 410 Gone)',

@@ -1,112 +1,21 @@
-name: CI
+name: CI (Deprecated - Python v1)
+
+# This workflow is DEPRECATED.
+# The Python backend (apps/api/) and legacy frontend (frontend/) have been
+# archived. All active CI is now in ci-ts.yml (NestJS API + React web app).
+#
+# This file is kept for historical reference only and will not run any jobs.
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
-  lint:
+  deprecated-notice:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - name: Install linting dependencies
+      - name: Python v1 CI is deprecated
         run: |
-          python -m pip install --upgrade pip
-          pip install ruff
-      - name: Run linter (API)
-        run: ruff check apps/api/ --output-format=github
-
-  test:
-    runs-on: ubuntu-latest
-    needs: lint
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r apps/api/requirements.txt
-          pip install -e apps/api
-          pip install pytest pytest-cov httpx
-      - name: Run tests with coverage
-        run: |
-          pytest tests/unit -v --tb=short \
-            --cov=cohort_lens \
-            --cov-report=term-missing \
-            --cov-report=xml:coverage.xml \
-            --cov-fail-under=50
-        env:
-          DATA_SOURCE: csv
-          JWT_SECRET: ci-test-secret
-          DEFAULT_AUTH_USER: admin
-          DEFAULT_USER_PASSWORD: admin
-      - name: Upload coverage
-        if: matrix.python-version == '3.10'
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
-
-  security:
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install safety
-      - name: Check for security vulnerabilities
-        run: safety check -r apps/api/requirements.txt --output text || true
-        continue-on-error: true
-
-  frontend:
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: pnpm install --frozen-lockfile || pnpm install
-      - name: TypeScript type check
-        working-directory: frontend
-        run: pnpm exec tsc --noEmit || true
-      - name: Build frontend
-        working-directory: frontend
-        run: pnpm build
-
-  build:
-    runs-on: ubuntu-latest
-    needs: [test, frontend]
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - name: Install API
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r apps/api/requirements.txt
-          pip install -e apps/api
+          echo "This workflow is deprecated."
+          echo "Python backend (apps/api/) has been archived in branch archive/python-v1."
+          echo "Legacy Next.js frontend (frontend/) has been archived in branch archive/nextjs-frontend."
+          echo "Active CI is in .github/workflows/ci-ts.yml"

@@ -11,10 +11,17 @@ const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     async onModuleInit() {
+        if (process.env.SKIP_DB === 'true') {
+            console.warn('PrismaService: SKIP_DB enabled, skipping database connect');
+            return;
+        }
         await this.$connect();
     }
     async enableShutdownHooks(app) {
-        this.$on('beforeExit', async () => {
+        process.on('SIGINT', async () => {
+            await app.close();
+        });
+        process.on('SIGTERM', async () => {
             await app.close();
         });
     }

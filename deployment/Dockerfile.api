@@ -1,10 +1,41 @@
-# Alias: same as Dockerfile (API backend).
-# Build from repo root: docker build -f deployment/Dockerfile.api .
+# Build from repo root:
+#   docker build -f deployment/Dockerfile.api -t cohortlens-api .
+#
+# Multi-stage build for NestJS API
 
-FROM python:3.11-slim
+FROM node:20-alpine AS base
+RUN npm install -g pnpm@8
 WORKDIR /app
-COPY apps/api/ /app/
-COPY config/ /app/config/
-RUN pip install --no-cache-dir -r requirements.txt && pip install -e .
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# ── Install dependencies ──────────────────────────────────────────────────────
+FROM base AS deps
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/api-ts/package.json ./apps/api-ts/
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/config/package.json ./packages/config/
+COPY packages/types/package.json ./packages/types/
+RUN pnpm install --frozen-lockfile
+
+# ── Build ─────────────────────────────────────────────────────────────────────
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api-ts/node_modules ./apps/api-ts/node_modules
+COPY . .
+RUN pnpm --filter @cohortlens/contracts build 2>/dev/null || true
+RUN pnpm --filter @cohortlens/api-ts prisma:generate
+RUN pnpm --filter @cohortlens/api-ts build
+
+# ── Production image ──────────────────────────────────────────────────────────
+FROM node:20-alpine AS runner
+RUN npm install -g pnpm@8
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=8001
+
+COPY --from=builder /app/apps/api-ts/dist ./dist
+COPY --from=builder /app/apps/api-ts/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 8001
+CMD ["node", "dist/src/main.js"]

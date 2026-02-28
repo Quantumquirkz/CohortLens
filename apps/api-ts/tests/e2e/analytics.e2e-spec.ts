@@ -31,6 +31,10 @@ describe('Analytics Endpoints (e2e)', () => {
       auditLog: { create: async () => {} } as any,
       segment: { createMany: async () => {} } as any,
       customer: { findMany: async () => [] } as any,
+      featureFlagRecord: {
+        findMany: async () => [],
+        upsert: async () => ({}),
+      },
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({

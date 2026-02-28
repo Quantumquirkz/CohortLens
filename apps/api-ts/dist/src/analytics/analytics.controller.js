@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AnalyticsController = void 0;
 const common_1 = require("@nestjs/common");
+const throttler_1 = require("@nestjs/throttler");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const analytics_service_1 = require("./analytics.service");
@@ -45,6 +46,7 @@ let AnalyticsController = class AnalyticsController {
 };
 exports.AnalyticsController = AnalyticsController;
 __decorate([
+    (0, throttler_1.SkipThrottle)(),
     (0, common_1.Get)('/health'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -91,6 +93,7 @@ __decorate([
 ], AnalyticsController.prototype, "recommendations", null);
 exports.AnalyticsController = AnalyticsController = __decorate([
     (0, swagger_1.ApiTags)('analytics'),
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
     (0, common_1.Controller)('/api/v2'),
     __metadata("design:paramtypes", [analytics_service_1.AnalyticsService])
 ], AnalyticsController);
