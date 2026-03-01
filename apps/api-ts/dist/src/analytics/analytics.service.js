@@ -111,6 +111,11 @@ let AnalyticsService = class AnalyticsService {
             limit,
         };
     }
+    async getCustomers() {
+        return this.prisma.customer.findMany({
+            orderBy: { id: 'desc' },
+        });
+    }
     confidenceFromScore(score) {
         if (score >= 75)
             return 'high';
@@ -128,6 +133,9 @@ let AnalyticsService = class AnalyticsService {
             };
         }
         await this.ensureUsageLimit(tenantId);
+        const latestVol = await this.prisma.marketVolatility.findFirst({
+            orderBy: { timestamp: 'desc' }
+        });
         const incomeNormalized = Math.min(1, Math.max(0, input.annual_income / 200000));
         const ageSweetSpot = 1 - Math.min(1, Math.abs(input.age - 38) / 40);
         const expNormalized = Math.min(1, input.work_experience / 30);
@@ -142,6 +150,12 @@ let AnalyticsService = class AnalyticsService {
             professionBoost * 100;
         const bounded = Math.max(0, Math.min(100, raw));
         const predicted = Number(bounded.toFixed(1));
+        const volMetric = latestVol?.value || 50;
+        let confidence = this.confidenceFromScore(predicted);
+        if (volMetric > 75 && confidence === 'high')
+            confidence = 'medium';
+        if (volMetric > 90)
+            confidence = 'low';
         await this.prisma.prediction.create({
             data: {
                 customerId: `api_${tenantId}`,
@@ -155,20 +169,30 @@ let AnalyticsService = class AnalyticsService {
                 tableName: 'predictions',
                 recordId: `api_${tenantId}`,
                 action: 'INSERT',
-                newValues: JSON.stringify({ predicted_spending: predicted, model_version: this.ruleVersion }),
+                newValues: JSON.stringify({ predicted_spending: predicted, confidence, model_version: this.ruleVersion }),
                 userId: tenantId,
             },
         });
         return {
             predicted_spending: predicted,
-            confidence: this.confidenceFromScore(predicted),
+            confidence,
             rule_version: this.ruleVersion,
         };
     }
-    clusterFromInput(row) {
+    async getDefiRiskForWallet(walletAddress) {
+        if (!walletAddress)
+            return null;
+        return this.prisma.deFiPortfolio.findFirst({
+            where: { walletAddress },
+            orderBy: { lastUpdated: 'desc' },
+        });
+    }
+    clusterFromInput(row, defiRiskScore) {
         const age = row.Age;
         const income = row['Annual Income ($)'];
         const spending = row['Spending Score (1-100)'];
+        if (spending >= 80 && defiRiskScore && defiRiskScore > 0.7)
+            return 6;
         if (income >= 90000 && spending >= 70)
             return 0;
         if (income >= 90000 && spending < 70)
@@ -189,7 +213,23 @@ let AnalyticsService = class AnalyticsService {
             };
         }
         await this.ensureUsageLimit(tenantId);
-        const clusters = rows.map((row) => this.clusterFromInput(row));
+        const customerIds = rows.map(r => r.CustomerID).filter(Boolean);
+        const customersWithWallets = await this.prisma.customer.findMany({
+            where: { customerId: { in: customerIds }, walletAddress: { not: null } },
+            select: { customerId: true, walletAddress: true }
+        });
+        const walletMap = new Map(customersWithWallets.map(c => [c.customerId, c.walletAddress]));
+        const wallets = customersWithWallets.map(c => c.walletAddress).filter(Boolean);
+        const portfolios = await this.prisma.deFiPortfolio.findMany({
+            where: { walletAddress: { in: wallets } },
+            orderBy: { lastUpdated: 'desc' }
+        });
+        const riskMap = new Map(portfolios.map(p => [p.walletAddress, p.riskScore]));
+        const clusters = rows.map((row) => {
+            const wallet = row.CustomerID ? walletMap.get(row.CustomerID) : undefined;
+            const riskScore = wallet ? riskMap.get(wallet) : undefined;
+            return this.clusterFromInput(row, riskScore);
+        });
         const inserts = rows
             .map((row, index) => ({
             customerId: row.CustomerID || `api_${tenantId}_${index}`,
@@ -248,7 +288,11 @@ let AnalyticsService = class AnalyticsService {
                 age: true,
                 annualIncome: true,
                 spendingScore: true,
+                walletAddress: true,
             },
+        });
+        const latestVol = await this.prisma.marketVolatility.findFirst({
+            orderBy: { timestamp: 'desc' }
         });
         const normalized = rows.map((r) => ({
             CustomerID: r.customerId,
@@ -256,8 +300,18 @@ let AnalyticsService = class AnalyticsService {
             'Annual Income ($)': Number(r.annualIncome),
             'Spending Score (1-100)': r.spendingScore ?? 50,
         }));
-        const clusters = normalized.map((r) => this.clusterFromInput(r));
-        const context = this.summarizeSegments(normalized, clusters);
+        const wallets = rows.map(r => r.walletAddress).filter(Boolean);
+        const portfolios = await this.prisma.deFiPortfolio.findMany({
+            where: { walletAddress: { in: wallets } },
+            orderBy: { lastUpdated: 'desc' }
+        });
+        const riskMap = new Map(portfolios.map(p => [p.walletAddress, p.riskScore]));
+        const clusters = rows.map((r, i) => {
+            const riskScore = r.walletAddress ? riskMap.get(r.walletAddress) : undefined;
+            return this.clusterFromInput(normalized[i], riskScore);
+        });
+        const segmentSummary = this.summarizeSegments(normalized, clusters);
+        const context = `Market Volatility (DVOL): ${latestVol?.value.toFixed(1) || 'Unknown'}. Segments: ${segmentSummary}`;
         const groqApiKey = this.config.get('GROQ_API_KEY', '');
         const model = this.config.get('GROQ_MODEL', 'llama-3.3-70b-versatile');
         if (!groqApiKey) {

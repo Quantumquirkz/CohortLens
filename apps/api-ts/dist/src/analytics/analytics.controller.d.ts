@@ -24,6 +24,21 @@ export declare class AnalyticsController {
         current_month_calls: number;
         limit: number;
     }>;
+    getCustomers(): Promise<{
+        id: number;
+        customerId: string;
+        gender: string | null;
+        age: number | null;
+        annualIncome: import("@prisma/client/runtime/library").Decimal;
+        spendingScore: number | null;
+        profession: string | null;
+        workExperience: number | null;
+        familySize: number | null;
+        walletAddress: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }[]>;
     predict(req: AuthRequest, body: PredictDto): Promise<{
         predicted_spending: number;
         confidence: "low" | "medium" | "high";

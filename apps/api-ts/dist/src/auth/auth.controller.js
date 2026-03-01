@@ -18,12 +18,19 @@ const throttler_1 = require("@nestjs/throttler");
 const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
+const web3_verify_dto_1 = require("./dto/web3-verify.dto");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
     createToken(body) {
         return this.authService.token(body.username, body.password);
+    }
+    getNonce(address) {
+        return this.authService.getNonce(address);
+    }
+    verifyWeb3Signature(body) {
+        return this.authService.verifyWeb3Signature(body.message, body.signature);
     }
 };
 exports.AuthController = AuthController;
@@ -35,6 +42,22 @@ __decorate([
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "createToken", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get a nonce for Web3 SIWE login' }),
+    (0, common_1.Get)('/nonce'),
+    __param(0, (0, common_1.Query)('address')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getNonce", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Verify Web3 SIWE signature and get JWT token' }),
+    (0, common_1.Post)('/verify'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [web3_verify_dto_1.Web3VerifyDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyWeb3Signature", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),

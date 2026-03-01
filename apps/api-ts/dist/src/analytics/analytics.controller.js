@@ -31,6 +31,9 @@ let AnalyticsController = class AnalyticsController {
         const tenantId = req.user?.tenant_id || req.user?.sub || 'anonymous';
         return this.analyticsService.usage(tenantId);
     }
+    getCustomers() {
+        return this.analyticsService.getCustomers();
+    }
     predict(req, body) {
         const tenantId = req.user?.tenant_id || req.user?.sub || 'anonymous';
         return this.analyticsService.predict(tenantId, body);
@@ -61,6 +64,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "usage", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('/customers'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AnalyticsController.prototype, "getCustomers", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

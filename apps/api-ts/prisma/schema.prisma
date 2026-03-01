@@ -9,14 +9,23 @@ datasource db {
 
 model User {
   id             Int       @id @default(autoincrement())
-  username       String    @unique @db.VarChar(100)
-  email          String    @unique @db.VarChar(255)
-  hashedPassword String    @map("hashed_password") @db.VarChar(255)
+  username       String?   @unique @db.VarChar(100)
+  email          String?   @unique @db.VarChar(255)
+  hashedPassword String?   @map("hashed_password") @db.VarChar(255)
+  walletAddress  String?   @unique @map("wallet_address") @db.VarChar(42)
+  nonce          String?   @db.VarChar(255)
+  zkProofHash    String?   @map("zk_proof_hash")
   isActive       Boolean   @default(true) @map("is_active")
   isAdmin        Boolean   @default(false) @map("is_admin")
   tenantId       String?   @map("tenant_id") @db.VarChar(100)
   lastLogin      DateTime? @map("last_login") @db.Timestamptz(6)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  defiPortfolios  DeFiPortfolio[]
+  zkCredentials   ZkCredential[]
+  marketBets      MarketBet[]
+  nftLicenses     NftLicense[]
+  loyaltyAirdrops LoyaltyAirdrop[]
 
   @@map("users")
 }
@@ -31,6 +40,7 @@ model Customer {
   profession     String?   @db.VarChar(100)
   workExperience Int?      @map("work_experience")
   familySize     Int?      @map("family_size")
+  walletAddress  String?   @map("wallet_address") @db.VarChar(42)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
@@ -103,4 +113,91 @@ model FeatureFlagRecord {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("feature_flags")
+}
+
+model DeFiPortfolio {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  walletAddress  String   @map("wallet_address") @db.VarChar(42)
+  totalValueUsd  Decimal  @map("total_value_usd") @db.Decimal(12, 2)
+  riskScore      Float    @map("risk_score")
+  lastUpdated    DateTime @default(now()) @map("last_updated") @db.Timestamptz(6)
+
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@map("defi_portfolios")
+}
+
+model MarketVolatility {
+  id        Int      @id @default(autoincrement())
+  indexName String   @map("index_name") @db.VarChar(50)
+  value     Float
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("market_volatility")
+}
+
+model ZkCredential {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  credentialType String   @map("credential_type") @db.VarChar(50)
+  proofHash      String   @map("proof_hash") @db.VarChar(255)
+  verifiedAt     DateTime @default(now()) @map("verified_at") @db.Timestamptz(6)
+
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@map("zk_credentials")
+}
+
+model PredictionMarket {
+  id              Int      @id @default(autoincrement())
+  question        String   @db.VarChar(255)
+  status          String   @default("OPEN") @db.VarChar(50) // OPEN, RESOLVED_YES, RESOLVED_NO
+  totalYesPool    Float    @default(0) @map("total_yes_pool")
+  totalNoPool     Float    @default(0) @map("total_no_pool")
+  endTime         DateTime @map("end_time") @db.Timestamptz(6)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bets            MarketBet[]
+
+  @@map("prediction_markets")
+}
+
+model MarketBet {
+  id          Int      @id @default(autoincrement())
+  marketId    Int      @map("market_id")
+  userId      Int      @map("user_id")
+  prediction  String   @db.VarChar(10) // YES, NO
+  amount      Float
+  placedAt    DateTime @default(now()) @map("placed_at") @db.Timestamptz(6)
+
+  market      PredictionMarket @relation(fields: [marketId], references: [id])
+  user        User             @relation(fields: [userId], references: [id])
+
+  @@map("market_bets")
+}
+
+model NftLicense {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id") @unique
+  tier        String   @db.VarChar(50) // BASIC, PRO, ENTERPRISE
+  tokenId     String   @map("token_id") @db.VarChar(255)
+  mintedAt    DateTime @default(now()) @map("minted_at") @db.Timestamptz(6)
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("nft_licenses")
+}
+
+model LoyaltyAirdrop {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  campaignName  String   @map("campaign_name") @db.VarChar(255)
+  tokenId       String   @map("token_id") @db.VarChar(255)
+  claimedAt     DateTime @default(now()) @map("claimed_at") @db.Timestamptz(6)
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("loyalty_airdrops")
 }

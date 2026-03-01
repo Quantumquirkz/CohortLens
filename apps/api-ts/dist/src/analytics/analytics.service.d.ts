@@ -29,12 +29,28 @@ export declare class AnalyticsService {
         current_month_calls: number;
         limit: number;
     }>;
+    getCustomers(): Promise<{
+        id: number;
+        customerId: string;
+        gender: string | null;
+        age: number | null;
+        annualIncome: import("@prisma/client/runtime/library").Decimal;
+        spendingScore: number | null;
+        profession: string | null;
+        workExperience: number | null;
+        familySize: number | null;
+        walletAddress: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+    }[]>;
     private confidenceFromScore;
     predict(tenantId: string, input: PredictDto): Promise<{
         predicted_spending: number;
         confidence: "low" | "medium" | "high";
         rule_version: string;
     }>;
+    private getDefiRiskForWallet;
     private clusterFromInput;
     segment(tenantId: string, rows: SegmentInput[]): Promise<{
         clusters: number[];

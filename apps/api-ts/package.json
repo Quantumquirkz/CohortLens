@@ -23,6 +23,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/schedule": "^6.1.1",
     "@nestjs/swagger": "^7.4.2",
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^6.4.1",
@@ -33,7 +34,9 @@
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "swagger-ui-express": "^5.0.1"
+    "siwe": "^3.0.0",
+    "swagger-ui-express": "^5.0.1",
+    "viem": "^2.46.3"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.4.15",
@@ -41,6 +44,7 @@
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.13",
     "@types/node": "^22.10.5",
+    "@types/node-fetch": "^2.6.13",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
     "jest": "^29.7.0",

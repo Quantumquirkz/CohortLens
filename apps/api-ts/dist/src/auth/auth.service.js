@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcryptjs");
+const siwe_1 = require("siwe");
 const prisma_service_1 = require("../prisma/prisma.service");
 let AuthService = class AuthService {
     constructor(prisma, jwt, config) {
@@ -28,14 +29,15 @@ let AuthService = class AuthService {
             return { sub: username, tenant_id: username };
         }
         const user = await this.prisma.user.findUnique({ where: { username } });
-        if (!user || !user.isActive) {
+        if (!user || !user.isActive || !user.hashedPassword) {
             throw new common_1.UnauthorizedException('Incorrect username or password');
         }
         const valid = await bcrypt.compare(password, user.hashedPassword);
         if (!valid) {
             throw new common_1.UnauthorizedException('Incorrect username or password');
         }
-        return { sub: user.username, tenant_id: user.tenantId || user.username };
+        const finalUsername = user.username;
+        return { sub: finalUsername, tenant_id: user.tenantId || finalUsername };
     }
     async token(username, password) {
         const payload = await this.validateUser(username, password);
@@ -45,6 +47,43 @@ let AuthService = class AuthService {
             access_token: accessToken,
             token_type: 'bearer',
             expires_in: expiresIn,
+        };
+    }
+    async getNonce(walletAddress) {
+        const nonce = (0, siwe_1.generateNonce)();
+        await this.prisma.user.upsert({
+            where: { walletAddress },
+            update: { nonce },
+            create: {
+                walletAddress,
+                nonce,
+                isActive: true,
+            },
+        });
+        return nonce;
+    }
+    async verifyWeb3Signature(message, signature) {
+        const siweMessage = new siwe_1.SiweMessage(message);
+        const { data: fields } = await siweMessage.verify({ signature });
+        const user = await this.prisma.user.findUnique({
+            where: { walletAddress: fields.address },
+        });
+        if (!user || user.nonce !== fields.nonce) {
+            throw new common_1.UnauthorizedException('Invalid nonce or user not found');
+        }
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { nonce: null, lastLogin: new Date() },
+        });
+        const expiresIn = Number(this.config.get('JWT_EXPIRE_SECONDS', '3600'));
+        const sub = user.username || user.walletAddress;
+        const tenant_id = user.tenantId || user.walletAddress;
+        const accessToken = await this.jwt.signAsync({ sub, tenant_id }, { expiresIn });
+        return {
+            access_token: accessToken,
+            token_type: 'bearer',
+            expires_in: expiresIn,
+            wallet_address: user.walletAddress,
         };
     }
 };

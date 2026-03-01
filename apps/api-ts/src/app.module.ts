@@ -6,6 +6,10 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
 import { FeatureFlagMiddleware } from './common/feature-flag.middleware';
+import { DefiModule } from './defi/defi.module';
+import { ZkModule } from './zk/zk.module';
+import { PredictModule } from './predict/predict.module';
+import { NftModule } from './nft/nft.module';
 
 @Module({
   imports: [
@@ -26,6 +30,10 @@ import { FeatureFlagMiddleware } from './common/feature-flag.middleware';
     AuthModule,
     AnalyticsModule,
     CommonModule,
+    DefiModule,
+    ZkModule,
+    PredictModule,
+    NftModule,
   ],
 })
 export class AppModule implements NestModule {

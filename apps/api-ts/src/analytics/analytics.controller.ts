@@ -20,7 +20,7 @@ type AuthRequest = ExpressRequest & { user: { sub: string; tenant_id?: string } 
 @UseGuards(ThrottlerGuard)
 @Controller('/api/v2')
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(private readonly analyticsService: AnalyticsService) { }
 
   @SkipThrottle()
   @Get('/health')
@@ -34,6 +34,13 @@ export class AnalyticsController {
   usage(@Request() req: AuthRequest) {
     const tenantId = req.user?.tenant_id || req.user?.sub || 'anonymous';
     return this.analyticsService.usage(tenantId);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('/customers')
+  getCustomers() {
+    return this.analyticsService.getCustomers();
   }
 
   @ApiBearerAuth()

@@ -15,6 +15,10 @@ const analytics_module_1 = require("./analytics/analytics.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 const common_module_1 = require("./common/common.module");
 const feature_flag_middleware_1 = require("./common/feature-flag.middleware");
+const defi_module_1 = require("./defi/defi.module");
+const zk_module_1 = require("./zk/zk.module");
+const predict_module_1 = require("./predict/predict.module");
+const nft_module_1 = require("./nft/nft.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer
@@ -43,6 +47,10 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             analytics_module_1.AnalyticsModule,
             common_module_1.CommonModule,
+            defi_module_1.DefiModule,
+            zk_module_1.ZkModule,
+            predict_module_1.PredictModule,
+            nft_module_1.NftModule,
         ],
     })
 ], AppModule);

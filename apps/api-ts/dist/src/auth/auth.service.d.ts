@@ -15,4 +15,11 @@ export declare class AuthService {
         token_type: "bearer";
         expires_in: number;
     }>;
+    getNonce(walletAddress: string): Promise<string>;
+    verifyWeb3Signature(message: string, signature: string): Promise<{
+        access_token: string;
+        token_type: "bearer";
+        expires_in: number;
+        wallet_address: string | null;
+    }>;
 }
