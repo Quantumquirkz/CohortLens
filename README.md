@@ -1,9 +1,6 @@
 # CohortLens
 
-**CohortLens** is a modular CRM analytics web platform that transforms customer data into actionable decisions. It provides customer segmentation, spending prediction, AI-powered recommendations, data drift monitoring, audit logging, consent management (SSI/Web3), and executive report generation — all in a unified web interface.
-
-> Project stewardship: [Jhuomar Boskoll Quintero](https://www.linkedin.com/in/jhuomar/)  
-> Team: **CodeCrafters United**
+**CohortLens** is a modular CRM analytics web platform that transforms customer data into actionable decisions. It provides customer segmentation, spending prediction, AI-powered recommendations, data drift monitoring, audit logging, consent management (SSI/Web3),A modular and comprehensive CRM analytics platform combining traditional and predictive insights. Prioritizing robust architecture, ethical AI practices, privacy, security, and scalability.
 
 ---
 
@@ -315,8 +312,7 @@ packages/
 
 ---
 
-## Team — CodeCrafters United
-
+**Team:** CohortLens Development Team
 | Role | Name | Profession |
 |---|---|---|
 | Backend | Cesar Prens | Software Developer & Cybersecurity Technician |
