@@ -12,7 +12,8 @@
     "test": "pnpm --filter @cohortlens/api-ts test:e2e",
     "test:api": "pnpm --filter @cohortlens/api-ts test:e2e",
     "prisma:generate": "pnpm --filter @cohortlens/api-ts prisma:generate",
-    "prisma:migrate": "pnpm --filter @cohortlens/api-ts prisma:migrate"
+    "prisma:migrate": "pnpm --filter @cohortlens/api-ts prisma:migrate",
+    "prisma:seed": "pnpm --filter @cohortlens/api-ts prisma:seed"
   },
   "devDependencies": {
     "turbo": "^2.0.0"

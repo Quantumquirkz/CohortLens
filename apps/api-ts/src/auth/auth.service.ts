@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -7,20 +7,29 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
   ) { }
 
-  async validateUser(username: string, password: string): Promise<{ sub: string; tenant_id: string }> {
-    const fallbackUser = this.config.get<string>('DEFAULT_AUTH_USER', 'admin');
-    const fallbackPassword = this.config.get<string>('DEFAULT_USER_PASSWORD', 'admin');
+  async validateUser(username: string, password: string): Promise<{ sub: string; tenant_id: string; isAdmin: boolean }> {
+    // Check if fallback auth is enabled (only for development)
+    const fallbackEnabled = this.config.get<boolean>('FALLBACK_AUTH_ENABLED', false);
+    
+    if (fallbackEnabled) {
+      const fallbackUser = this.config.get<string>('DEFAULT_AUTH_USER', 'admin');
+      const fallbackPassword = this.config.get<string>('DEFAULT_USER_PASSWORD', 'admin');
 
-    if (username === fallbackUser && password === fallbackPassword) {
-      return { sub: username, tenant_id: username };
+      if (username === fallbackUser && password === fallbackPassword) {
+        this.logger.warn(`Fallback authentication used for user: ${username}`);
+        return { sub: username, tenant_id: username, isAdmin: true };
+      }
     }
 
+    // Validate against database
     const user = await this.prisma.user.findUnique({ where: { username } });
     if (!user || !user.isActive || !user.hashedPassword) {
       throw new UnauthorizedException('Incorrect username or password');
@@ -33,7 +42,11 @@ export class AuthService {
 
     // username is guaranteed here because we searched by it, but TS doesn't know
     const finalUsername = user.username!;
-    return { sub: finalUsername, tenant_id: user.tenantId || finalUsername };
+    return { 
+      sub: finalUsername, 
+      tenant_id: user.tenantId || finalUsername,
+      isAdmin: user.isAdmin 
+    };
   }
 
   async token(username: string, password: string) {

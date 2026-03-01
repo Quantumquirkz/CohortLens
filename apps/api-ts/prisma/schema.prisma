@@ -27,6 +27,8 @@ model User {
   nftLicenses     NftLicense[]
   loyaltyAirdrops LoyaltyAirdrop[]
 
+  @@index([tenantId])
+  @@index([walletAddress])
   @@map("users")
 }
 
@@ -45,6 +47,9 @@ model Customer {
   updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
 
+  @@index([spendingScore])
+  @@index([annualIncome])
+  @@index([profession])
   @@map("customers")
 }
 
@@ -56,6 +61,9 @@ model Prediction {
   featuresSnapshot  String?  @map("features_snapshot")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  @@index([customerId])
+  @@index([modelVersion])
+  @@index([createdAt])
   @@map("predictions")
 }
 
@@ -66,6 +74,8 @@ model Segment {
   modelVersion String?  @map("model_version") @db.VarChar(50)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  @@index([customerId])
+  @@index([cluster])
   @@map("segments")
 }
 
@@ -77,6 +87,7 @@ model ApiUsage {
   lastCalled DateTime @default(now()) @map("last_called_at") @db.Timestamptz(6)
 
   @@unique([tenantId, monthKey])
+  @@index([tenantId])
   @@map("api_usage")
 }
 
