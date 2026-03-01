@@ -1,24 +1,32 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
+import { MarketService } from './market.service';
 
 @Injectable()
 export class DefiService {
     private readonly logger = new Logger(DefiService.name);
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly marketService: MarketService
+    ) { }
 
     @Cron(CronExpression.EVERY_10_MINUTES)
     async fetchOnChainData() {
         this.logger.log('Fetching on-chain DeFi & Volatility data...');
 
-        // 1. Mock Fetch Volatility (e.g. DVOL)
-        const mockDvolIndex = 65.5 + (Math.random() * 10 - 5);
+        // 1. Fetch real market prices
+        const prices = await this.marketService.getLivePrices();
+        const ethChange = Math.abs(prices.ethereum?.usd_24h_change || 0);
+
+        // Derive volatility from 24h price change if DVOL not directly available
+        const derivedVol = 50 + (ethChange * 2);
 
         await this.prisma.marketVolatility.create({
             data: {
                 indexName: 'ETH-DVOL',
-                value: mockDvolIndex,
+                value: derivedVol,
             }
         });
 
@@ -28,13 +36,13 @@ export class DefiService {
         });
 
         for (const user of users) {
-            // Mock portfolio value calculation via RPC
+            // In a real app we'd fetch balance via RPC, 
+            // here we simulate based on some known "whale" addresses or random
             const mockPortfolioValue = 10000 + (Math.random() * 5000);
 
             // Calculate Risk Score: (Volatility / 100) * (PortfolioSize Penalty)
-            // Higher numbers = Higher Risk of Liquidations/Churn
-            let riskScore = mockDvolIndex / 100;
-            if (mockPortfolioValue > 12000) riskScore += 0.2; // Whales have more complex risk profiles
+            let riskScore = derivedVol / 100;
+            if (mockPortfolioValue > 13000) riskScore += 0.15;
 
             await this.prisma.deFiPortfolio.create({
                 data: {

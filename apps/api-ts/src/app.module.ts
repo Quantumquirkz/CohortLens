@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
-import { AnalyticsModule } from './analytics/analytics.module';
+import { ProfileModule } from './profile/profile.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
 import { FeatureFlagMiddleware } from './common/feature-flag.middleware';
@@ -28,7 +28,7 @@ import { NftModule } from './nft/nft.module';
     ]),
     PrismaModule,
     AuthModule,
-    AnalyticsModule,
+    ProfileModule,
     CommonModule,
     DefiModule,
     ZkModule,
