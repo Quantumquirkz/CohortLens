@@ -22,7 +22,7 @@ packages/
 - **Node.js** 18+ (for frontend and `graph-cli` in indexers)
 - **Python** 3.11+ (backend without Docker)
 - **Docker** and Docker Compose (integrated environment)
-- **Foundry** (`forge`, `cast`) para [`packages/contracts`](packages/contracts/README.md)
+- **Foundry** (`forge`, `cast`) for [`packages/contracts`](packages/contracts/README.md)
 
 ## Quick start with Docker
 

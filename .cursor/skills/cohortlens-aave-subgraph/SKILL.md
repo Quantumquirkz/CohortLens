@@ -1,63 +1,63 @@
 ---
 name: cohortlens-aave-subgraph
-description: Scaffold and maintain the Aave v3 Polygon subgraph for CohortLens under packages/indexers/protocols/aave-v3 (The Graph, AssemblyScript, Graph Node or hosted deploy).
+description: Scaffold and maintain the Aave v3 Polygon subgraph for CohortLens under packages/indexers/protocols/aave-v3/polygon (The Graph, AssemblyScript, Graph Node or hosted deploy).
 ---
 
-# CohortLens — Subgraph Aave v3 (Polygon)
+# CohortLens — Aave v3 subgraph (Polygon)
 
-## Cuándo usar
+## When to use
 
-- Crear o actualizar el subgraph que indexa el **Pool** de Aave v3 en Polygon.
-- Ejecutar `codegen` / `build` / despliegue contra **Graph Node** local o **Subgraph Studio**.
+- Create or update the subgraph that indexes the Aave v3 **Pool** on Polygon.
+- Run `codegen` / `build` / deploy against local **Graph Node** or **Subgraph Studio**.
 
-## Estructura
+## Layout
 
 ```
-packages/indexers/protocols/aave-v3/
-  subgraph.yaml      # dataSource Pool, red polygon, handlers de eventos
-  schema.graphql     # entidades User, Deposit, Withdrawal, Borrow, Repayment
+packages/indexers/protocols/aave-v3/polygon/
+  subgraph.yaml      # Pool dataSource, polygon network, event handlers
+  schema.graphql     # User, Deposit, Withdrawal, Borrow, Repayment entities
   package.json
-  abis/Pool.json     # ABI mínimo (Supply, Withdraw, Borrow, Repay)
+  abis/Pool.json     # minimal ABI (Supply, Withdraw, Borrow, Repay)
   src/mapping.ts
 ```
 
-## Comandos locales
+## Local commands
 
 ```bash
-cd packages/indexers/protocols/aave-v3
+cd packages/indexers/protocols/aave-v3/polygon
 npm install
 npx graph codegen
 npx graph build
 ```
 
-## Graph Node local (docker-compose en la raíz del monorepo)
+## Local Graph Node (docker-compose at monorepo root)
 
-1. Arranca `postgres-graph`, `ipfs`, `graph-node` (y opcionalmente `POLYGON_RPC_URL` en el entorno del compose).
-2. Admin JSON-RPC del nodo suele mapearse al host en el puerto **8020** (revisa [docker-compose.yml](../../../docker-compose.yml)).
-3. Crea el subgraph y despliega (sustituye `VERSION` y la etiqueta del manifest):
+1. Start `postgres-graph`, `ipfs`, `graph-node` (and optionally `POLYGON_RPC_URL` in compose env).
+2. The node’s admin JSON-RPC is usually mapped to the host on port **8020** (see [docker-compose.yml](../../../docker-compose.yml)).
+3. Create the subgraph and deploy (replace `VERSION` and manifest label):
 
 ```bash
-# Ejemplo: crear subgrafo "cohortlens/aave-v3" en el nodo local
+# Example: create subgraph "cohortlens/aave-v3" on local node
 npx graph create --node http://127.0.0.1:8020 cohortlens/aave-v3
 
 npx graph deploy --node http://127.0.0.1:8020 --ipfs http://127.0.0.1:5001 cohortlens/aave-v3
 ```
 
-4. Con el `docker-compose` de este repo, el **Graph Node** expone HTTP en el host en el puerto **8020** (`8020:8000`). La URL de consulta GraphQL suele ser `http://127.0.0.1:8020/subgraphs/name/cohortlens/aave-v3`. Dentro de la red Docker usa `http://graph-node:8000/subgraphs/name/cohortlens/aave-v3`.
+4. With this repo’s `docker-compose`, **Graph Node** exposes HTTP on the host at **8020** (`8020:8000`). The GraphQL query URL is usually `http://127.0.0.1:8020/subgraphs/name/cohortlens/aave-v3`. Inside Docker use `http://graph-node:8000/subgraphs/name/cohortlens/aave-v3`.
 
-## Servicio alojado (The Graph Studio)
+## Hosted service (The Graph Studio)
 
-1. Crea un subgrafo en [The Graph Studio](https://thegraph.com/studio/).
-2. Autentica `graph auth --studio <DEPLOY_KEY>`.
+1. Create a subgraph in [The Graph Studio](https://thegraph.com/studio/).
+2. Authenticate `graph auth --studio <DEPLOY_KEY>`.
 3. `graph deploy --studio <SUBGRAPH_SLUG>`.
-4. Copia la **Query URL** HTTPS y configúrala como `SUBGRAPH_URL` en `packages/backend-ai`.
+4. Copy the HTTPS **Query URL** and set it as `SUBGRAPH_URL` in `packages/backend-ai`.
 
 ## Backend
 
-- Variable `SUBGRAPH_URL` debe apuntar al endpoint GraphQL HTTP del subgrafo desplegado.
-- El backend **no** ejecuta el indexer; solo consulta con POST GraphQL.
+- `SUBGRAPH_URL` must point to the deployed subgraph’s HTTP GraphQL endpoint.
+- The backend does **not** run the indexer; it only queries via POST GraphQL.
 
-## Referencias
+## References
 
 - [The Graph — Docs](https://thegraph.com/docs/)
 - [Install Graph CLI](https://thegraph.com/docs/en/subgraphs/developing/creating/install-the-graph-cli/)

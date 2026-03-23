@@ -5,21 +5,21 @@ description: Next.js App Router UI for the decentralized model marketplace — l
 
 # CohortLens — Marketplace (frontend)
 
-## Rutas (App Router)
+## Routes (App Router)
 
-- [`app/marketplace/page.tsx`](../../../packages/frontend/app/marketplace/page.tsx) — lista `GET /api/v1/models`.
-- [`app/models/[id]/page.tsx`](../../../packages/frontend/app/models/[id]/page.tsx) — detalle y formulario de predicción.
+- [`app/marketplace/page.tsx`](../../../packages/frontend/app/marketplace/page.tsx) — list `GET /api/v1/models`.
+- [`app/models/[id]/page.tsx`](../../../packages/frontend/app/models/[id]/page.tsx) — detail and prediction form.
 
-No uses `pages/` salvo migración legacy; ver [`.cursorrules`](../../../.cursorrules).
+Do not use `pages/` except legacy migration; see [`.cursorrules`](../../../.cursorrules).
 
 ## API
 
 - Base: `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`).
-- Tipos en `types/model.ts`; hooks en `hooks/useModelsApi.ts`.
-- Navegación: enlace en `AppHeader` a `/marketplace`.
+- Types in `types/model.ts`; hooks in `hooks/useModelsApi.ts`.
+- Navigation: link in `AppHeader` to `/marketplace`.
 
-## Flujo UX
+## UX flow
 
-1. Marketplace muestra nombre, propietario, precio (wei), CID.
-2. "Usar modelo" navega a `/models/{id}`.
-3. Usuario introduce vector de características (JSON) y opcionalmente conecta wallet para firmar si el backend exige auth.
+1. Marketplace shows name, owner, price (wei), CID.
+2. "Use model" navigates to `/models/{id}`.
+3. User enters a feature vector (JSON) and optionally connects a wallet to sign if the backend requires auth.
