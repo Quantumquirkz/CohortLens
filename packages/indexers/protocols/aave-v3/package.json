@@ -1,0 +1,14 @@
+{
+  "name": "cohortlens-aave-v3-subgraph",
+  "private": true,
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-ts": "0.35.1"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "0.97.0"
+  }
+}

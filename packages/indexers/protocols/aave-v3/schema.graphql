@@ -1,0 +1,12 @@
+type User @entity(immutable: false) {
+  id: ID!
+  address: Bytes!
+  deposits: [Deposit!]! @derivedFrom(field: "user")
+}
+
+type Deposit @entity(immutable: true) {
+  id: ID!
+  user: User!
+  amount: BigInt!
+  blockNumber: BigInt!
+}
