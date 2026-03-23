@@ -2,11 +2,54 @@ type User @entity(immutable: false) {
   id: ID!
   address: Bytes!
   deposits: [Deposit!]! @derivedFrom(field: "user")
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "user")
+  borrows: [Borrow!]! @derivedFrom(field: "user")
+  repayments: [Repayment!]! @derivedFrom(field: "user")
 }
 
 type Deposit @entity(immutable: true) {
   id: ID!
   user: User!
+  reserve: Bytes!
   amount: BigInt!
   blockNumber: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+  gasUsed: BigInt!
+}
+
+type Withdrawal @entity(immutable: true) {
+  id: ID!
+  user: User!
+  reserve: Bytes!
+  to: Bytes!
+  amount: BigInt!
+  blockNumber: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+  gasUsed: BigInt!
+}
+
+type Borrow @entity(immutable: true) {
+  id: ID!
+  user: User!
+  reserve: Bytes!
+  amount: BigInt!
+  interestRateMode: Int!
+  blockNumber: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+  gasUsed: BigInt!
+}
+
+type Repayment @entity(immutable: true) {
+  id: ID!
+  user: User!
+  reserve: Bytes!
+  repayer: Bytes!
+  amount: BigInt!
+  blockNumber: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+  gasUsed: BigInt!
 }

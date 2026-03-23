@@ -81,9 +81,54 @@ services:
     environment:
       DATABASE_URL: postgresql://cohortlens:cohortlens@postgres:5432/cohortlens
       REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SUBGRAPH_URL: ${SUBGRAPH_URL:-http://graph-node:8000/subgraphs/name/cohortlens/aave-v3}
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-https://rpc.sepolia.org}
+      COHORT_ORACLE_ADDRESS: ${COHORT_ORACLE_ADDRESS:-}
+      COHORT_LENS_ID: ${COHORT_LENS_ID:-0}
+      ORACLE_REQUESTER_PRIVATE_KEY: ${ORACLE_REQUESTER_PRIVATE_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      graph-node:
+        condition: service_started
+
+  celery-worker:
+    build:
+      context: ./packages/backend-ai
+      dockerfile: Dockerfile
+    command: celery -A app.worker.celery_app worker --loglevel=info
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-https://rpc.sepolia.org}
+      COHORT_ORACLE_ADDRESS: ${COHORT_ORACLE_ADDRESS:-}
+      ORACLE_OWNER_PRIVATE_KEY: ${ORACLE_OWNER_PRIVATE_KEY:-}
+      ORACLE_FROM_BLOCK: ${ORACLE_FROM_BLOCK:-0}
+      ORACLE_SCAN_CHUNK_BLOCKS: ${ORACLE_SCAN_CHUNK_BLOCKS:-2000}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: ./packages/backend-ai
+      dockerfile: Dockerfile
+    command: celery -A app.worker.celery_app beat --loglevel=info
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-https://rpc.sepolia.org}
+      COHORT_ORACLE_ADDRESS: ${COHORT_ORACLE_ADDRESS:-}
+      ORACLE_OWNER_PRIVATE_KEY: ${ORACLE_OWNER_PRIVATE_KEY:-}
+      ORACLE_FROM_BLOCK: ${ORACLE_FROM_BLOCK:-0}
+      ORACLE_SCAN_CHUNK_BLOCKS: ${ORACLE_SCAN_CHUNK_BLOCKS:-2000}
+    depends_on:
       redis:
         condition: service_healthy
 

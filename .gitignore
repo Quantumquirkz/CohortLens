@@ -66,3 +66,4 @@ packages/indexers/**/node_modules/
 *.swp
 *.swo
 *~
+*.tsbuildinfo

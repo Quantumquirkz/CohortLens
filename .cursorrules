@@ -1,0 +1,66 @@
+# CohortLens — Monorepo
+
+## Layout
+
+- `packages/frontend` — Next.js (App Router), Tailwind, Wagmi/Viem, React Query.
+- `packages/backend-ai` — FastAPI, clustering, clientes GraphQL (subgraphs) y **web3.py** para contratos.
+- `packages/indexers` — Subgraphs The Graph por protocolo (`protocols/<protocolo>/`).
+- `packages/contracts` — Solidity (Foundry), p. ej. `CohortOracle`.
+
+## Datos on-chain e indexación (The Graph)
+
+- Un subgraph por protocolo bajo `packages/indexers/protocols/<nombre>/`: `subgraph.yaml`, `schema.graphql`, `src/mapping.ts`, `abis/*.json`.
+- **AssemblyScript** en `mapping.ts`; entidades versionadas; IDs deterministas (p. ej. `txHash-logIndex`).
+- Despliegue: **Graph Node** local (compose en la raíz) o **Subgraph Studio / red alojada**; el backend solo consume la URL HTTP de consulta GraphQL (`SUBGRAPH_URL`).
+- No mezclar lógica de indexación en el backend Python: el backend agrega y consulta; el subgraph indexa eventos.
+
+## Backend Python (`packages/backend-ai`)
+
+- **FastAPI** + **Pydantic v2**; tipado estricto; sin `any`.
+- Lectura de datos indexados: cliente GraphQL con **timeouts**, paginación (`first`/`skip`) y manejo explícito de errores GraphQL (`errors` en la respuesta JSON).
+- Contratos EVM: **web3.py** únicamente (viem es para el frontend TypeScript).
+- Estado asíncrono fuera del request: **Celery** con broker/backend **Redis**; tareas idempotentes; punteros de bloque en Redis o DB para scanners de eventos.
+- Claves privadas (`ORACLE_OWNER_PRIVATE_KEY`, firmantes de transacciones) solo en variables de entorno, nunca en código ni en imágenes públicas.
+
+---
+
+# CohortLens — Frontend (packages/frontend)
+
+## Stack
+
+- **Next.js 14+** with the **App Router** (`app/`). Do not add new routes under `pages/` unless migrating legacy code.
+- **TypeScript** strict mode; no `any` unless justified with a short comment.
+- **Tailwind CSS** for styling; prefer utility classes and small `@layer` additions in `styles/globals.css` over ad-hoc CSS files.
+- **Wagmi v2** + **Viem** for wallets; **TanStack React Query** for server state (mutations/queries).
+- **Axios** for HTTP clients in `lib/` / hooks when centralizing API calls.
+
+## Project layout (packages/frontend)
+
+- `app/` — routes, `layout.tsx`, `page.tsx`, `error.tsx`, `providers.tsx` (client providers only).
+- `components/ui/` — **atoms**: buttons, inputs, small presentational pieces (e.g. `WalletButton`).
+- `components/cohort/` — **domain / organisms**: cohort-specific UI (e.g. `CohortTable`).
+- `components/layout/` — **templates**: headers, footers, shells shared across routes.
+- `hooks/` — custom hooks (`useWallet`, `useCohortApi`); prefix with `use`.
+- `lib/` — config, API clients, wagmi config, env helpers; no JSX.
+- `styles/` — `globals.css` and global Tailwind entry.
+- `types/` — shared TypeScript types and DTOs aligned with the backend.
+
+## Conventions
+
+- **Files**: kebab-case for route segments; **components** PascalCase (`WalletButton.tsx`).
+- **Exports**: prefer named exports for components and hooks.
+- **Components**: functional components only; explicit prop types/interfaces.
+- **Data fetching**: use React Query (`useMutation` / `useQuery`) for API calls; surface loading and error states in the UI.
+- **Wallets**: wrap the tree with `WagmiProvider` + `QueryClientProvider` in a single client `Providers` component in `app/providers.tsx`.
+- **Errors**: use `app/error.tsx` (and `global-error.tsx` when needed) for route-level failures; show actionable retry UI.
+- **Atomic design**: atoms in `ui/`, feature blocks in `cohort/` or `layout/`, compose in `app/` pages.
+
+## API
+
+- Base URL: `process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"`.
+- Cohort discovery: `POST /api/v1/cohorts/discover` — request/response types live in `types/cohort.ts` and must match the FastAPI schemas.
+
+## Do not
+
+- Inline dynamic `import()` inside components for libraries that belong at the top of the file.
+- Bypass React Query for duplicated fetch logic when mutations/queries are already standardized in hooks.

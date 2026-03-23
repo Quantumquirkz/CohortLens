@@ -18,10 +18,19 @@ dataSources:
       entities:
         - User
         - Deposit
+        - Withdrawal
+        - Borrow
+        - Repayment
       abis:
         - name: Pool
           file: ./abis/Pool.json
       file: ./src/mapping.ts
       eventHandlers:
         - event: Supply(indexed address,address,indexed address,uint256,indexed uint16)
-          handler: handleDeposit
+          handler: handleSupply
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256)
+          handler: handleWithdraw
+        - event: Borrow(indexed address,address,indexed address,uint256,uint8,uint256,indexed uint16)
+          handler: handleBorrow
+        - event: Repay(indexed address,indexed address,indexed address,uint256,bool)
+          handler: handleRepay

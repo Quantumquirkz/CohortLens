@@ -1,0 +1,47 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "requestId", "type": "uint256" },
+      { "indexed": true, "internalType": "uint256", "name": "lensId", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "requester", "type": "address" },
+      { "indexed": false, "internalType": "bytes", "name": "input", "type": "bytes" }
+    ],
+    "name": "PredictionRequested",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "lensId", "type": "uint256" },
+      { "internalType": "bytes", "name": "input", "type": "bytes" }
+    ],
+    "name": "requestPrediction",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "requestId", "type": "uint256" },
+      { "internalType": "bytes", "name": "result", "type": "bytes" }
+    ],
+    "name": "fulfillRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "requests",
+    "outputs": [
+      { "internalType": "uint256", "name": "lensId", "type": "uint256" },
+      { "internalType": "address", "name": "requester", "type": "address" },
+      { "internalType": "bytes", "name": "input", "type": "bytes" },
+      { "internalType": "bool", "name": "fulfilled", "type": "bool" },
+      { "internalType": "bytes", "name": "result", "type": "bytes" },
+      { "internalType": "uint256", "name": "createdAt", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

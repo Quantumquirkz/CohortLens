@@ -33,3 +33,7 @@ Path: [`protocols/aave-v3/`](protocols/aave-v3/).
 4. To deploy against a local **Graph Node** (e.g. the `graph-node` service from `docker-compose` at the monorepo root), configure the admin URL and follow the [official deployment docs](https://thegraph.com/docs/en/deploying/deploying-a-subgraph-to-hosted/).
 
 General documentation: [The Graph — Docs](https://thegraph.com/docs/).
+
+## Aave v3 (Polygon)
+
+El subgrafo completo vive en [`protocols/aave-v3/`](protocols/aave-v3/); consulta su [README](protocols/aave-v3/README.md) para build, despliegue y URL de consulta (`SUBGRAPH_URL` en el backend).

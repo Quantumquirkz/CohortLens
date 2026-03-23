@@ -50,3 +50,11 @@ class CohortResponse(BaseModel):
 
     cohorts: list[Cohort]
     total_users: int
+    oracle_request_id: int | None = Field(
+        default=None,
+        description="ID de petición en CohortOracle (Sepolia), si se envió on-chain",
+    )
+    oracle_tx_hash: str | None = Field(
+        default=None,
+        description="Hash de la transacción requestPrediction, si aplica",
+    )
