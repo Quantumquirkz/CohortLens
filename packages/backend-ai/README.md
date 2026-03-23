@@ -1,48 +1,53 @@
 # CohortLens Backend AI
 
-API FastAPI para descubrimiento de cohortes (K-Means) sobre métricas agregadas desde un **subgraph** (Aave v3) y registro opcional en el contrato **CohortOracle** en Sepolia, con cumplimiento asíncrono vía **Redis + Celery**.
+FastAPI service for cohort discovery (K-Means) on metrics aggregated from a **subgraph** (Aave v3) and optional registration on the **CohortOracle** contract (e.g. Sepolia), with async fulfillment via **Redis + Celery**.
 
-## Requisitos
+## Requirements
 
-- Python 3.11 o 3.12
-- Redis (colas Celery y claves `oracle:pending:*`)
-- Subgraph desplegado y accesible por HTTP (`SUBGRAPH_URL`)
-- Para oracle on-chain: contrato desplegado en Sepolia y claves con ETH (requester) y owner (fulfill)
+- Python 3.11 or 3.12
+- Redis (Celery queues and `oracle:pending:*` keys)
+- Deployed subgraph reachable over HTTP (`SUBGRAPH_URL`)
+- For on-chain oracle: contract deployed on your target chain and keys with ETH (requester) and owner (fulfill)
 
-## Variables de entorno
+## Environment variables
 
-Copia `.env.example` a `.env` y ajusta valores. Resumen:
+Copy `.env.example` to `.env` and adjust. Summary:
 
-| Variable | Descripción |
+| Variable | Description |
 |----------|-------------|
-| `SUBGRAPH_URL` | URL HTTP del endpoint GraphQL del subgraph (p. ej. Graph Node local en `http://127.0.0.1:8020/subgraphs/name/cohortlens/aave-v3`). |
-| `SEPOLIA_RPC_URL` | RPC JSON-RPC de Sepolia. |
-| `COHORT_ORACLE_ADDRESS` | Dirección del `CohortOracle` desplegado. |
-| `COHORT_LENS_ID` | `lensId` pasado a `requestPrediction`. |
-| `ORACLE_REQUESTER_PRIVATE_KEY` | Clave que firma `requestPrediction` (sin `0x` opcional según cliente). |
-| `ORACLE_OWNER_PRIVATE_KEY` | Clave del **owner** del contrato; solo debe usarse en el worker Celery para `fulfillRequest`. |
-| `REDIS_URL` | Redis para pendientes de oracle y puntero de bloque. |
-| `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` | Broker/resultados Celery (típicamente Redis). |
-| `ORACLE_FROM_BLOCK` | Primer bloque a escanear si no hay puntero en Redis. |
-| `ORACLE_SCAN_CHUNK_BLOCKS` | Tamaño de ventana de bloques por tanda en el worker. |
-| `IPFS_API_URL` | API HTTP de Kubo (p. ej. `http://127.0.0.1:5001` o `http://ipfs:5001` en Docker). |
-| `COHORT_REGISTRY_ADDRESS` | Contrato `CohortRegistry` en Sepolia para `registerLens` / lectura de lentes. |
-| `REGISTRY_UPLOADER_PRIVATE_KEY` | Clave que firma `registerLens` en el flujo de subida (MVP custodial; documentar para producción). |
-| `MODEL_CACHE_DIR` | Directorio donde se cachean artefactos descargados por CID. |
-| `MAX_UPLOAD_BYTES` | Tamaño máximo del multipart de subida de modelo. |
-| `REQUIRE_WALLET_AUTH` | Si `true`, `POST /api/v1/models/{id}/predict` exige cabeceras `X-Wallet-Address`, `X-Wallet-Signature`, `X-Wallet-Nonce` (nonce vía `GET /api/v1/auth/nonce`). |
+| `SUBGRAPH_URL` | HTTP GraphQL endpoint for the subgraph (e.g. local Graph Node at `http://127.0.0.1:8020/subgraphs/name/cohortlens/aave-v3`). |
+| `SEPOLIA_RPC_URL` | Sepolia JSON-RPC URL. |
+| `COHORT_ORACLE_ADDRESS` | Deployed `CohortOracle` address. |
+| `COHORT_LENS_ID` | `lensId` passed to `requestPrediction`. |
+| `ORACLE_REQUESTER_PRIVATE_KEY` | Key that signs `requestPrediction` (`0x` optional depending on client). |
+| `ORACLE_OWNER_PRIVATE_KEY` | Contract **owner** key; use only on the Celery worker for `fulfillRequest`. |
+| `REDIS_URL` | Redis for oracle pending state and block pointer. |
+| `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` | Celery broker/result backend (typically Redis). |
+| `ORACLE_FROM_BLOCK` | First block to scan if no pointer in Redis. |
+| `ORACLE_SCAN_CHUNK_BLOCKS` | Block window size per scan batch in the worker. |
+| `IPFS_API_URL` | Kubo HTTP API (e.g. `http://127.0.0.1:5001` or `http://ipfs:5001` in Docker). |
+| `COHORT_REGISTRY_ADDRESS` | `CohortRegistry` on Sepolia for `registerLens` / lens reads. |
+| `REGISTRY_UPLOADER_PRIVATE_KEY` | Key that signs `registerLens` in the upload flow (MVP custodial; harden for production). |
+| `MODEL_CACHE_DIR` | Directory for cached artifacts downloaded by CID. |
+| `MAX_UPLOAD_BYTES` | Maximum multipart upload size for models. |
+| `REQUIRE_WALLET_AUTH` | If `true`, `POST /api/v1/models/{id}/predict` requires `X-Wallet-Address`, `X-Wallet-Signature`, `X-Wallet-Nonce` (nonce from `GET /api/v1/auth/nonce`). |
+| `CHAINS_JSON` | JSON map of logical chains → `{ subgraph_url, rpc_url, cohort_oracle_address, cohort_registry_address }`. If empty, `SUBGRAPH_URL` and global RPC are used as chain `polygon`. |
+| `ORACLE_SCAN_CHAIN` | Chain the Celery worker scans for `fulfill` (default `polygon`). |
+| `COHORT_CACHE_TTL_SECONDS` | Redis TTL for clustering results (when oracle is not used). |
+| `ENABLE_ZK_PROOF_FOR_ONNX` | If `true`, async ONNX predictions with `with_zk` generate a ZK bundle + IPFS. |
+| `PROMETHEUS_ENABLED` | Exposes `/metrics` (HTTP histograms). |
 
-Si faltan `COHORT_ORACLE_ADDRESS` o `ORACLE_REQUESTER_PRIVATE_KEY`, el endpoint `/discover` **no** llama al contrato y devuelve solo cohortes (`oracle_request_id` nulo).
+If `COHORT_ORACLE_ADDRESS` or `ORACLE_REQUESTER_PRIVATE_KEY` is missing, `/discover` does **not** call the contract and returns cohorts only (`oracle_request_id` null).
 
-### Marketplace de modelos (Fase 5)
+### Model marketplace (phase 5)
 
-- **Pickle / joblib y ONNX**: la API valida buffers antes de aceptarlos; **pickle solo de fuentes confiables** (riesgo de ejecución arbitraria).
-- **Flujo de subida**: `POST /api/v1/models/upload` (multipart) → IPFS (`add`) → `registerLens` on-chain → fila en Postgres (`lenses`).
-- **Predicción**: `POST /api/v1/models/{id}/predict` (sync) o con `?async_mode=true` + Celery; estado en `GET /api/v1/models/predictions/{task_id}`.
-- **Migraciones**: `alembic upgrade head` (tabla `lenses`). En desarrollo también se crea esquema vía `create_all` al arrancar.
-- **Script de ejemplo**: `python scripts/train_churn_model.py` genera un pickle y puede subirlo si defines `COHORTLENS_UPLOAD_URL` o `--upload-url`.
+- **Pickle / joblib and ONNX**: the API validates buffers before accept; **pickle only from trusted sources** (arbitrary code execution risk).
+- **Upload flow**: `POST /api/v1/models/upload` (multipart) → IPFS (`add`) → `registerLens` on-chain → Postgres row (`lenses`).
+- **Prediction**: `POST /api/v1/models/{id}/predict` (sync) or `?async_mode=true` + Celery; status at `GET /api/v1/models/predictions/{task_id}`.
+- **Migrations**: `alembic upgrade head` (table `lenses`). In dev, schema is also created via `create_all` on startup.
+- **Example script**: `python scripts/train_churn_model.py` builds a pickle and can upload if you set `COHORTLENS_UPLOAD_URL` or `--upload-url`.
 
-## Desarrollo local
+## Local development
 
 ```bash
 python3 -m venv .venv
@@ -53,44 +58,85 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ### Celery (oracle)
 
-En terminales separadas (con Redis en marcha):
+In separate terminals (with Redis running):
 
 ```bash
-celery -A app.worker.celery_app worker --loglevel=info
-celery -A app.worker.celery_app beat --loglevel=info
+celery -A app.tasks.celery_app worker --loglevel=info -Q ml_tasks,prediction_tasks,zk_tasks
+celery -A app.tasks.celery_app beat --loglevel=info
 ```
 
-La tarea `scan_and_fulfill_oracle` se ejecuta cada 30 s, lee eventos `PredictionRequested`, recupera el resultado gzip en Redis (`oracle:pending:<id>`) y envía `fulfillRequest`.
+The `scan_and_fulfill_oracle` task runs every 30s, reads `PredictionRequested` events, loads the gzip result from Redis (`oracle:pending:<id>`), and sends `fulfillRequest`.
 
-## Flujo `/api/v1/cohorts/discover`
+## `/api/v1/cohorts/discover` flow
 
-1. Consulta GraphQL: agrega por usuario `tx_count`, `volume`, `avg_gas` en el rango de bloques (`protocol` debe ser compatible con Aave v3, p. ej. `aave-v3`).
-2. Ejecuta K-Means sobre las `features` solicitadas.
-3. Si el oracle está configurado: construye un payload gzip para `input`, llama a `requestPrediction`, guarda en Redis el resultado gzip completo para el worker, y devuelve `oracle_request_id` y `oracle_tx_hash`.
+1. GraphQL: aggregate per user `tx_count`, `volume`, `avg_gas` over the block range (`protocol` must match Aave v3, e.g. `aave-v3`).
+2. Run K-Means on the requested `features`.
+3. If oracle is configured: build gzip payload for `input`, call `requestPrediction`, store the full gzip result in Redis for the worker, return `oracle_request_id` and `oracle_tx_hash`.
 
 ## Docker
 
-Desde la raíz del monorepo:
+From the monorepo root:
 
 ```bash
-docker compose up --build backend-ai celery-worker celery-beat redis ipfs graph-node
+docker compose up --build backend-ai celery-worker celery-beat redis ipfs graph-node prometheus grafana
 ```
 
-Asegúrate de desplegar el subgraph con el nombre esperado en `SUBGRAPH_URL` o sobrescribe la variable. Para subidas de modelos, el servicio **ipfs** debe estar levantado; `backend-ai` y `celery-worker` usan `IPFS_API_URL=http://ipfs:5001` y el volumen `model_cache` para artefactos.
+Deploy the subgraph with the name expected in `SUBGRAPH_URL` / `CHAINS_JSON` or override the variable. For model uploads, **ipfs** must be up; `backend-ai` and `celery-worker` use `IPFS_API_URL=http://ipfs:5001` and the `model_cache` volume. **Prometheus** (port 9090) scrapes `backend-ai:8000/metrics`; **Grafana** on 3001 (admin via `GRAFANA_ADMIN_PASSWORD`).
+
+### Scaling Celery workers
+
+- Increase `celery-worker` replicas in Compose or run multiple processes with the same `-Q ml_tasks,prediction_tasks,zk_tasks`.
+- For very high load, deploy workers on **Akash** (see `deploy/akash/README.md` at the monorepo root) pointing at the same Redis broker.
+
+### New chains
+
+Set `CHAINS_JSON`, for example:
+
+```json
+{
+  "polygon": {
+    "subgraph_url": "http://graph-node:8000/subgraphs/name/cohortlens/aave-v3",
+    "rpc_url": "https://polygon-rpc.com",
+    "cohort_oracle_address": "0x...",
+    "cohort_registry_address": "0x..."
+  },
+  "ethereum": {
+    "subgraph_url": "https://api.studio.thegraph.com/query/.../aave-v3-eth/v0.0.1",
+    "rpc_url": "https://eth.llamarpc.com",
+    "cohort_oracle_address": "",
+    "cohort_registry_address": ""
+  }
+}
+```
+
+The body of `POST /api/v1/cohorts/discover` includes `chain` (default `polygon`).
+
+### Akash
+
+See [`deploy/akash/README.md`](../../deploy/akash/README.md): Docker image, env vars, and `scripts/deploy_akash.sh`.
+
+### ZK proofs (EZKL)
+
+- `ENABLE_ZK_PROOF_FOR_ONNX=true` and async prediction with `with_zk: true` (see `POST /api/v1/predictions/async`) produce a commitment-hash bundle and upload to IPFS.
+- For full SNARK proofs, install the EZKL binary and extend `app/models/zk_prover.py` with your compiled artifacts.
+- The `CohortOracle` contract exposes `registerPredictionProofHash` to store the hash on-chain (audit).
 
 ## Endpoints
 
-| Método | Ruta | Descripción |
+| Method | Path | Description |
 |--------|------|-------------|
-| GET | `/health` | Estado del servicio |
-| POST | `/api/v1/cohorts/discover` | Descubrir cohortes |
-| GET | `/api/v1/models` | Listar modelos (caché Postgres; `?sync_chain=true` opcional) |
-| POST | `/api/v1/models/upload` | Subir artefacto y registrar lente |
-| POST | `/api/v1/models/{id}/predict` | Inferencia (sync o async) |
-| GET | `/api/v1/models/predictions/{task_id}` | Estado de tarea Celery |
-| GET | `/api/v1/auth/nonce` | Nonce para firma de wallet |
+| GET | `/health` | Service health |
+| POST | `/api/v1/cohorts/discover` | Discover cohorts |
+| GET | `/api/v1/models` | List models (Postgres cache; optional `?sync_chain=true`) |
+| POST | `/api/v1/models/upload` | Upload artifact and register lens |
+| POST | `/api/v1/models/{id}/predict` | Inference (sync or `?async_mode=true`) |
+| GET | `/api/v1/models/predictions/{task_id}` | Celery task status |
+| POST | `/api/v1/predictions/async` | Enqueue inference (`lens_id`, `features`, optional `with_zk`) |
+| GET | `/api/v1/predictions/{task_id}/status` | Same Celery queue status |
+| GET | `/metrics` | Prometheus metrics (if `PROMETHEUS_ENABLED`) |
+| GET | `/api/v1/auth/nonce` | Nonce for wallet signature |
 
-## Codificación on-chain
+## On-chain encoding
 
-- **Input** (`requestPrediction`): JSON gzip con `centroid_sha256`, `total_users`, `n_clusters`.
-- **Result** (`fulfillRequest`): JSON gzip del `CohortResponse` completo (cohortes + totales).
+- **Input** (`requestPrediction`): gzip JSON with `centroid_sha256`, `total_users`, `n_clusters`.
+- **Result** (`fulfillRequest`): gzip JSON of the full `CohortResponse` (cohorts + totals).

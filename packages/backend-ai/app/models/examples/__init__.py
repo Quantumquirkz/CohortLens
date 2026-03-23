@@ -1,1 +1,1 @@
-"""Ejemplos de modelos entrenables."""
+"""Trainable model examples."""

@@ -1,4 +1,4 @@
-"""Autenticación opcional por firma de wallet (EIP-191)."""
+"""Optional wallet signature authentication (EIP-191)."""
 
 from __future__ import annotations
 
@@ -30,18 +30,18 @@ def verify_wallet_signature(
     nonce: str | None,
 ) -> str:
     if not address or not signature or not nonce:
-        raise HTTPException(status_code=401, detail="Cabeceras de wallet incompletas")
+        raise HTTPException(status_code=401, detail="Incomplete wallet headers")
     r = _redis()
     if not r.exists(f"nonce:{nonce}"):
-        raise HTTPException(status_code=401, detail="Nonce inválido o expirado")
+        raise HTTPException(status_code=401, detail="Invalid or expired nonce")
     msg = f"CohortLens auth\nNonce: {nonce}\n"
     message = encode_defunct(text=msg)
     try:
         recovered = Account.recover_message(message, signature=signature)
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Firma inválida: {e}") from e
+        raise HTTPException(status_code=401, detail=f"Invalid signature: {e}") from e
     if recovered.lower() != address.lower():
-        raise HTTPException(status_code=401, detail="La firma no coincide con la dirección")
+        raise HTTPException(status_code=401, detail="Signature does not match address")
     r.delete(f"nonce:{nonce}")
     return address
 

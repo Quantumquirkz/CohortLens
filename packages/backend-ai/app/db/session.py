@@ -1,4 +1,4 @@
-"""Sesión y motor SQLAlchemy."""
+"""SQLAlchemy session and engine."""
 
 from __future__ import annotations
 

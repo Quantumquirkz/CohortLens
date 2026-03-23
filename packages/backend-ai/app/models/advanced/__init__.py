@@ -1,4 +1,4 @@
-"""Tipos para modelos avanzados (churn, LTV, toxicidad)."""
+"""Types for advanced models (churn, LTV, toxicity)."""
 
 from enum import Enum
 

@@ -1,4 +1,4 @@
-"""Cliente web3.py para CohortOracle en Sepolia."""
+"""web3.py client for CohortOracle (e.g. Sepolia)."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def _load_abi() -> list[dict[str, Any]]:
 def get_web3(rpc_url: str) -> Web3:
     w3 = Web3(Web3.HTTPProvider(rpc_url))
     if not w3.is_connected():
-        msg = f"No se pudo conectar al RPC: {rpc_url}"
+        msg = f"Could not connect to RPC: {rpc_url}"
         raise RuntimeError(msg)
     return w3
 
@@ -36,7 +36,7 @@ def get_oracle_contract(w3: Web3, address: str) -> Contract:
 
 
 def _apply_fee_fields(w3: Web3, tx: dict[str, Any]) -> None:
-    """Rellena gasPrice o EIP-1559 para redes como Sepolia."""
+    """Fill gasPrice or EIP-1559 fields (e.g. Sepolia)."""
     last = w3.eth.get_block("latest")
     base = last.get("baseFeePerGas")
     if base is not None:
@@ -49,7 +49,7 @@ def _apply_fee_fields(w3: Web3, tx: dict[str, Any]) -> None:
 
 
 def build_prediction_input_bytes(response: CohortResponse) -> bytes:
-    """Entrada compacta para ``requestPrediction`` (hash de centroides + metadatos, gzip)."""
+    """Compact input for ``requestPrediction`` (centroid hash + metadata, gzip)."""
     centers = [c.center for c in response.cohorts]
     digest = hashlib.sha256(
         json.dumps(centers, sort_keys=True).encode("utf-8"),
@@ -63,7 +63,7 @@ def build_prediction_input_bytes(response: CohortResponse) -> bytes:
 
 
 def build_fulfillment_bytes(response: CohortResponse) -> bytes:
-    """Resultado completo (gzip JSON) para ``fulfillRequest``."""
+    """Full result (gzip JSON) for ``fulfillRequest``."""
     return gzip.compress(response.model_dump_json().encode("utf-8"))
 
 
@@ -74,7 +74,7 @@ def request_prediction(
     lens_id: int,
     input_bytes: bytes,
 ) -> tuple[int, str]:
-    """Envía ``requestPrediction`` y devuelve ``(requestId, tx_hash_hex)``."""
+    """Send ``requestPrediction`` and return ``(requestId, tx_hash_hex)``."""
     account = Account.from_key(private_key)
     chain_id = w3.eth.chain_id
 
@@ -117,7 +117,7 @@ def _parse_request_id_from_logs(w3: Web3, receipt: Any, oracle_address: str) -> 
         if rid is None:
             continue
         return int(rid)
-    msg = "No se encontró PredictionRequested en el recibo"
+    msg = "PredictionRequested not found in receipt"
     raise RuntimeError(msg)
 
 
@@ -128,7 +128,7 @@ def fulfill_request(
     request_id: int,
     result_bytes: bytes,
 ) -> str:
-    """``fulfillRequest`` firmado por el owner del contrato."""
+    """``fulfillRequest`` signed by the contract owner."""
     account = Account.from_key(owner_private_key)
     chain_id = w3.eth.chain_id
 
@@ -151,8 +151,44 @@ def fulfill_request(
     return Web3.to_hex(th) if th is not None else ""
 
 
+def register_prediction_proof_hash(
+    w3: Web3,
+    contract: Contract,
+    owner_private_key: str,
+    request_id: int,
+    proof_hash: bytes,
+) -> str:
+    """``registerPredictionProofHash`` signed by the owner (ZK audit)."""
+    if len(proof_hash) != 32:
+        msg = "proof_hash must be exactly 32 bytes"
+        raise ValueError(msg)
+    account = Account.from_key(owner_private_key)
+    chain_id = w3.eth.chain_id
+
+    tx = contract.functions.registerPredictionProofHash(
+        request_id,
+        proof_hash,
+    ).build_transaction(
+        {
+            "from": account.address,
+            "nonce": w3.eth.get_transaction_count(account.address),
+            "gas": 300_000,
+            "chainId": chain_id,
+        },
+    )
+    _apply_fee_fields(w3, tx)
+    gas_est = w3.eth.estimate_gas(tx)
+    tx["gas"] = int(gas_est * 1.2) + 20_000
+
+    signed = account.sign_transaction(tx)
+    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+    receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    th = receipt["transactionHash"]
+    return Web3.to_hex(th) if th is not None else ""
+
+
 def is_oracle_ready(settings: Any) -> bool:
-    """True si hay RPC, contrato y clave para firmar ``requestPrediction``."""
+    """True if RPC, contract, and key are set to sign ``requestPrediction``."""
     return bool(
         settings.SEPOLIA_RPC_URL
         and settings.COHORT_ORACLE_ADDRESS

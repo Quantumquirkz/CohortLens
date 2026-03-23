@@ -1,4 +1,4 @@
-"""Ejemplo: clasificador de churn con datos sintéticos."""
+"""Example: churn classifier with synthetic data."""
 
 from __future__ import annotations
 

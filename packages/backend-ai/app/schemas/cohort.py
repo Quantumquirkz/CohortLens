@@ -29,6 +29,10 @@ class CohortRequest(BaseModel):
     """Request body for cohort discovery."""
 
     protocol: str
+    chain: str = Field(
+        default="polygon",
+        description="Logical chain id (e.g. polygon, ethereum); must exist in CHAINS_JSON",
+    )
     start_block: int
     end_block: int
     num_clusters: int = Field(default=3, ge=1, le=200, description="Number of K-Means clusters")
@@ -52,9 +56,9 @@ class CohortResponse(BaseModel):
     total_users: int
     oracle_request_id: int | None = Field(
         default=None,
-        description="ID de petición en CohortOracle (Sepolia), si se envió on-chain",
+        description="Request id on CohortOracle (e.g. Sepolia) if sent on-chain",
     )
     oracle_tx_hash: str | None = Field(
         default=None,
-        description="Hash de la transacción requestPrediction, si aplica",
+        description="requestPrediction transaction hash, if applicable",
     )

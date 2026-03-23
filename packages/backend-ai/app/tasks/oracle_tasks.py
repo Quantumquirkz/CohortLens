@@ -1,12 +1,14 @@
-"""Tareas Celery: escaneo de eventos del oracle y fulfill."""
+"""Celery tasks: oracle event scan and fulfill."""
 
 from __future__ import annotations
 
 import redis
-from celery import shared_task
 
 from app.core.config import settings
 from app.services.blockchain_client import fulfill_request, get_oracle_contract, get_web3
+from app.services.chain_manager import ChainManagerError, get_chain_config
+from app.tasks.base import OracleScanTask
+from app.tasks.celery_app import celery_app
 
 
 def _args_from_event(decoded: object) -> dict:
@@ -24,13 +26,23 @@ def _args_from_event(decoded: object) -> dict:
     return {}
 
 
-@shared_task(name="app.worker.tasks.scan_and_fulfill_oracle")
-def scan_and_fulfill_oracle() -> str:
-    if not settings.COHORT_ORACLE_ADDRESS or not settings.ORACLE_OWNER_PRIVATE_KEY:
-        return "omitido: falta COHORT_ORACLE_ADDRESS u ORACLE_OWNER_PRIVATE_KEY"
+@celery_app.task(
+    bind=True,
+    base=OracleScanTask,
+    name="app.tasks.oracle_tasks.scan_and_fulfill_oracle",
+)
+def scan_and_fulfill_oracle(self: OracleScanTask) -> str:
+    if not settings.ORACLE_OWNER_PRIVATE_KEY:
+        return "skipped: missing ORACLE_OWNER_PRIVATE_KEY"
+    try:
+        chain = get_chain_config(settings.ORACLE_SCAN_CHAIN)
+    except ChainManagerError as e:
+        return f"skipped: invalid oracle chain: {e}"
+    if not chain.cohort_oracle_address:
+        return "skipped: missing cohort_oracle_address for scan chain"
 
-    w3 = get_web3(settings.SEPOLIA_RPC_URL)
-    contract = get_oracle_contract(w3, settings.COHORT_ORACLE_ADDRESS)
+    w3 = get_web3(chain.rpc_url)
+    contract = get_oracle_contract(w3, chain.cohort_oracle_address)
     r = redis.from_url(settings.REDIS_URL)
 
     last_key = "oracle:last_scanned_block"
@@ -46,7 +58,7 @@ def scan_and_fulfill_oracle() -> str:
     to_block = min(from_block + span - 1, latest)
 
     if from_block > latest:
-        return "sin bloques nuevos"
+        return "no new blocks"
 
     ev = contract.events.PredictionRequested
     raw_logs = ev.get_logs(from_block=from_block, to_block=to_block)
@@ -74,4 +86,4 @@ def scan_and_fulfill_oracle() -> str:
         fulfilled += 1
 
     r.set(last_key, str(to_block))
-    return f"bloques {from_block}-{to_block} logs={len(raw_logs)} fulfilled={fulfilled}"
+    return f"blocks {from_block}-{to_block} logs={len(raw_logs)} fulfilled={fulfilled}"

@@ -1,4 +1,4 @@
-"""Modelos ORM."""
+"""ORM models."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from app.db.base import Base
 
 
 class LensRecord(Base):
-    """Caché local de lentes registrados en CohortRegistry."""
+    """Local cache of lenses registered on CohortRegistry."""
 
     __tablename__ = "lenses"
 

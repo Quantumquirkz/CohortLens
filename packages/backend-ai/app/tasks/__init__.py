@@ -1,1 +1,1 @@
-"""Tareas Celery adicionales (modelos)."""
+"""Additional Celery tasks (models)."""

@@ -1,4 +1,4 @@
-"""Registro y carga de artefactos ML desde IPFS (caché local)."""
+"""Model registry and artifact loading from IPFS (local cache)."""
 
 from __future__ import annotations
 
@@ -18,11 +18,11 @@ from app.services.ipfs_client import cat_bytes
 
 
 class ModelRegistryError(RuntimeError):
-    """Error al cargar o ejecutar un modelo."""
+    """Failed to load or run a model."""
 
 
 class ModelRegistry:
-    """Gestiona rutas locales y predicción pickle/ONNX."""
+    """Local paths and pickle/ONNX prediction."""
 
     def __init__(self, db: Session, cache_dir: Path | None = None) -> None:
         self._db = db
@@ -32,10 +32,10 @@ class ModelRegistry:
     def get_lens_row(self, lens_id: int) -> LensRecord:
         row = self._db.get(LensRecord, lens_id)
         if row is None:
-            msg = f"Lente {lens_id} no encontrada en la base de datos"
+            msg = f"Lens {lens_id} not found in database"
             raise ModelRegistryError(msg)
         if not row.active:
-            msg = f"Lente {lens_id} inactiva"
+            msg = f"Lens {lens_id} is inactive"
             raise ModelRegistryError(msg)
         return row
 
@@ -58,21 +58,21 @@ class ModelRegistry:
             return self._predict_pickle(path, features)
         if fmt == "onnx":
             return self._predict_onnx(path, features)
-        msg = f"Formato no soportado: {row.model_format}"
+        msg = f"Unsupported format: {row.model_format}"
         raise ModelRegistryError(msg)
 
     def _predict_pickle(self, path: Path, features: list[float]) -> dict[str, Any]:
         try:
             model = joblib.load(path)
         except Exception as e:
-            raise ModelRegistryError(f"No se pudo cargar pickle: {e}") from e
+            raise ModelRegistryError(f"Could not load pickle: {e}") from e
         if not hasattr(model, "predict"):
-            raise ModelRegistryError("El objeto pickle no expone predict()")
+            raise ModelRegistryError("Pickle object does not expose predict()")
         x = np.array(features, dtype=np.float64).reshape(1, -1)
         try:
             out = model.predict(x)
         except Exception as e:
-            raise ModelRegistryError(f"predict() falló: {e}") from e
+            raise ModelRegistryError(f"predict() failed: {e}") from e
         return {
             "raw": out.tolist() if hasattr(out, "tolist") else list(out),
             "format": "pickle",
@@ -82,20 +82,20 @@ class ModelRegistry:
         try:
             sess = InferenceSession(str(path))
         except Exception as e:
-            raise ModelRegistryError(f"ONNX inválido: {e}") from e
+            raise ModelRegistryError(f"Invalid ONNX: {e}") from e
         inp = sess.get_inputs()
         if not inp:
-            raise ModelRegistryError("Sesión ONNX sin entradas")
+            raise ModelRegistryError("ONNX session has no inputs")
         name = inp[0].name
         shape = inp[0].shape
         arr = np.array(features, dtype=np.float32).reshape(1, -1)
         if len(shape) == 2 and shape[1] not in (None, -1) and int(shape[1]) != arr.shape[1]:
-            msg = f"Se esperaban {shape[1]} features, hay {arr.shape[1]}"
+            msg = f"Expected {shape[1]} features, got {arr.shape[1]}"
             raise ModelRegistryError(msg)
         try:
             out = sess.run(None, {name: arr})
         except Exception as e:
-            raise ModelRegistryError(f"Inferencia ONNX falló: {e}") from e
+            raise ModelRegistryError(f"ONNX inference failed: {e}") from e
         first = out[0] if out else None
         return {
             "raw": first.tolist() if first is not None else [],
@@ -104,21 +104,21 @@ class ModelRegistry:
 
 
 def validate_pickle_buffer(buf: bytes, max_bytes: int) -> None:
-    """Carga efímera en memoria para comprobar predict; no persiste."""
+    """Ephemeral in-memory load to validate predict(); does not persist."""
     if len(buf) > max_bytes:
-        msg = f"Archivo demasiado grande (máx {max_bytes} bytes)"
+        msg = f"File too large (max {max_bytes} bytes)"
         raise ModelRegistryError(msg)
     try:
         model = joblib.load(io.BytesIO(buf))
     except Exception as e:
-        raise ModelRegistryError(f"pickle/joblib inválido: {e}") from e
+        raise ModelRegistryError(f"Invalid pickle/joblib: {e}") from e
     if not hasattr(model, "predict"):
-        raise ModelRegistryError("El modelo debe tener método predict")
+        raise ModelRegistryError("Model must have a predict method")
 
 
 def validate_onnx_buffer(buf: bytes, max_bytes: int) -> None:
     if len(buf) > max_bytes:
-        msg = f"Archivo demasiado grande (máx {max_bytes} bytes)"
+        msg = f"File too large (max {max_bytes} bytes)"
         raise ModelRegistryError(msg)
     tmp = settings.MODEL_CACHE_DIR / "_validate.onnx"
     tmp.parent.mkdir(parents=True, exist_ok=True)
@@ -126,6 +126,6 @@ def validate_onnx_buffer(buf: bytes, max_bytes: int) -> None:
     try:
         InferenceSession(str(tmp))
     except Exception as e:
-        raise ModelRegistryError(f"ONNX inválido: {e}") from e
+        raise ModelRegistryError(f"Invalid ONNX: {e}") from e
     finally:
         tmp.unlink(missing_ok=True)

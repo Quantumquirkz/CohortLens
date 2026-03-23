@@ -1,4 +1,4 @@
-"""Esquemas Pydantic para API de modelos."""
+"""Pydantic schemas for the models API."""
 
 from __future__ import annotations
 

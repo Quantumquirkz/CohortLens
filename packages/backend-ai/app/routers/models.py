@@ -1,6 +1,4 @@
-"""API de modelos (marketplace)."""
-
-from __future__ import annotations
+"""Models API (marketplace)."""
 
 from celery.result import AsyncResult
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
@@ -29,8 +27,8 @@ from app.schemas.models_api import (
 from app.services.blockchain_client import get_web3
 from app.services.ipfs_client import IpfsError, add_bytes
 from app.services.registry_contract import get_lens, get_registry_contract, lens_count, register_lens
-from app.tasks.model_tasks import run_predict_task
-from app.worker.celery_app import celery_app
+from app.services.async_prediction import enqueue_predict
+from app.tasks.celery_app import celery_app
 
 router = APIRouter()
 
@@ -74,7 +72,7 @@ def _sync_from_chain(db: Session) -> None:
 @router.get("", response_model=list[LensPublic])
 async def list_models(
     db: Session = Depends(get_db),
-    sync_chain: bool = Query(False, description="Sincronizar metadatos desde el contrato"),
+    sync_chain: bool = Query(False, description="Sync metadata from chain contract"),
 ) -> list[LensPublic]:
     if sync_chain and settings.COHORT_REGISTRY_ADDRESS:
         _sync_from_chain(db)
@@ -105,20 +103,20 @@ async def upload_model(
     description: str = Form(""),
     model_type: str = Form("generic"),
     price_per_query_wei: int = Form(0),
-    model_format: str = Form(..., description="pickle u onnx"),
+    model_format: str = Form(..., description="pickle or onnx"),
 ) -> LensUploadResponse:
     if not _registry_ready():
         raise HTTPException(
             status_code=503,
-            detail="Configura COHORT_REGISTRY_ADDRESS y REGISTRY_UPLOADER_PRIVATE_KEY",
+            detail="Set COHORT_REGISTRY_ADDRESS and REGISTRY_UPLOADER_PRIVATE_KEY",
         )
     fmt = model_format.lower().strip()
     if fmt not in ("pickle", "onnx"):
-        raise HTTPException(status_code=400, detail="model_format debe ser pickle u onnx")
+        raise HTTPException(status_code=400, detail="model_format must be pickle or onnx")
 
     data = await file.read()
     if len(data) > settings.MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail="Archivo demasiado grande")
+        raise HTTPException(status_code=413, detail="File too large")
 
     try:
         if fmt == "pickle":
@@ -146,7 +144,7 @@ async def upload_model(
             price_per_query_wei,
         )
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Registro on-chain falló: {e}") from e
+        raise HTTPException(status_code=502, detail=f"On-chain registration failed: {e}") from e
 
     row = db.get(LensRecord, lens_id)
     lens_onchain = get_lens(w3, c, lens_id)
@@ -196,11 +194,11 @@ async def predict(
         raise HTTPException(status_code=404, detail=str(e)) from e
 
     if async_mode:
-        task = run_predict_task.delay(model_id, body.features)
+        task_id = enqueue_predict(model_id, body.features, with_zk=False)
         return PredictResponse(
             lens_id=model_id,
             result={},
-            task_id=task.id,
+            task_id=task_id,
             async_mode=True,
         )
 

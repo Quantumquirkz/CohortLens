@@ -1,4 +1,4 @@
-"""Cliente GraphQL para consultar el subgraph indexado (Aave v3)."""
+"""GraphQL client for the indexed subgraph (Aave v3)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from app.core.config import settings
 
 
 class GraphClientError(RuntimeError):
-    """Error al consultar el subgraph o al interpretar la respuesta GraphQL."""
+    """Error querying the subgraph or parsing the GraphQL response."""
 
 
 class _UserRef(TypedDict):
@@ -103,7 +103,7 @@ def _wei_to_decimal(amount_str: str) -> Decimal:
     try:
         return Decimal(amount_str) / Decimal(10**18)
     except Exception as e:
-        raise GraphClientError(f"Importe inválido del subgraph: {amount_str!r}") from e
+        raise GraphClientError(f"Invalid subgraph amount: {amount_str!r}") from e
 
 
 async def _fetch_entity_pages(
@@ -111,6 +111,7 @@ async def _fetch_entity_pages(
     entity: str,
     start_block: int,
     end_block: int,
+    subgraph_url: str,
 ) -> list[_OpRow]:
     query = _ENTITY_QUERIES[entity]
     out: list[_OpRow] = []
@@ -129,7 +130,7 @@ async def _fetch_entity_pages(
                 "end": end_s,
             },
         }
-        resp = await client.post(settings.SUBGRAPH_URL, json=payload)
+        resp = await client.post(subgraph_url, json=payload)
         resp.raise_for_status()
         body = resp.json()
         if "errors" in body and body["errors"]:
@@ -137,7 +138,7 @@ async def _fetch_entity_pages(
         data = body.get("data") or {}
         batch = data.get(entity) or []
         if not isinstance(batch, list):
-            raise GraphClientError(f"Respuesta inesperada para {entity}")
+            raise GraphClientError(f"Unexpected response for entity {entity}")
         for row in batch:
             out.append(row)  # type: ignore[arg-type]
         if len(batch) < first:
@@ -151,18 +152,21 @@ async def fetch_user_metrics_for_block_range(
     start_block: int,
     end_block: int,
     protocol: str,
+    subgraph_url: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Obtiene usuarios con métricas agregadas en el rango de bloques (subgraph Aave v3).
+    """Fetch users with aggregated metrics for the block range (Aave v3 subgraph).
 
-    Claves por usuario: ``address``, ``tx_count``, ``volume`` (suma de importes en unidades de token),
-    ``avg_gas`` (media de gas por transacción indexada; puede ser 0 si el subgrafo no rellena gas).
+    Per user: ``address``, ``tx_count``, ``volume`` (sum of amounts in token units),
+    ``avg_gas`` (average gas per indexed tx; may be 0 if the subgraph does not fill gas).
     """
     if protocol.lower() not in ("aave", "aave-v3", "aave_v3"):
         raise GraphClientError(
-            f"Protocolo no soportado para subgraph: {protocol!r}. Usa aave-v3.",
+            f"Unsupported subgraph protocol: {protocol!r}. Use aave-v3.",
         )
     if start_block > end_block:
-        raise GraphClientError("start_block no puede ser mayor que end_block")
+        raise GraphClientError("start_block cannot be greater than end_block")
+
+    endpoint = subgraph_url if subgraph_url is not None else settings.SUBGRAPH_URL
 
     metrics: dict[str, dict[str, Decimal]] = defaultdict(
         lambda: {
@@ -175,7 +179,13 @@ async def fetch_user_metrics_for_block_range(
     timeout = httpx.Timeout(settings.SUBGRAPH_TIMEOUT_SECONDS)
     async with httpx.AsyncClient(timeout=timeout) as client:
         for entity in _ENTITY_QUERIES:
-            rows = await _fetch_entity_pages(client, entity, start_block, end_block)
+            rows = await _fetch_entity_pages(
+                client,
+                entity,
+                start_block,
+                end_block,
+                endpoint,
+            )
             for row in rows:
                 user = row.get("user")
                 if not user or not user.get("id"):

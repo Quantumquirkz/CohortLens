@@ -1,4 +1,4 @@
-"""Tabla lenses para caché de CohortRegistry.
+"""Lenses table for CohortRegistry cache.
 
 Revision ID: 001
 Revises:

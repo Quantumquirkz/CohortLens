@@ -1,4 +1,4 @@
-"""Interacción con CohortRegistry (Sepolia)."""
+"""CohortRegistry interaction (e.g. Sepolia)."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ def register_lens(
     model_hash: str,
     price_per_query_wei: int,
 ) -> tuple[int, str]:
-    """Registra un lens y devuelve ``(lens_id, tx_hash)``."""
+    """Register a lens and return ``(lens_id, tx_hash)``."""
     account = Account.from_key(private_key)
     chain_id = w3.eth.chain_id
 
@@ -77,12 +77,12 @@ def _parse_lens_id_from_logs(w3: Web3, receipt: Any, registry_address: str) -> i
         lid = args["id"] if isinstance(args, dict) else getattr(args, "id", None)
         if lid is not None:
             return int(lid)
-    msg = "No se encontró LensRegistered en el recibo"
+    msg = "LensRegistered not found in receipt"
     raise RuntimeError(msg)
 
 
 def get_lens(w3: Web3, contract: Contract, lens_id: int) -> dict[str, Any]:
-    """Devuelve el struct Lens como dict de Python."""
+    """Return the Lens struct as a Python dict."""
     t = contract.functions.getLens(lens_id).call()
     if isinstance(t, (list, tuple)) and len(t) >= 8:
         return {

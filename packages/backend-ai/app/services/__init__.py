@@ -1,1 +1,1 @@
-"""Servicios de integración externa (GraphQL, blockchain, Redis)."""
+"""External integration services (GraphQL, blockchain, Redis)."""

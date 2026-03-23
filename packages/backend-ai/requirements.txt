@@ -1,4 +1,5 @@
 fastapi==0.104.1
+python-multipart==0.0.9
 uvicorn[standard]==0.24.0
 scikit-learn==1.4.2
 numpy==1.26.4
@@ -15,4 +16,8 @@ alembic==1.14.0
 psycopg2-binary==2.9.10
 slowapi==0.1.9
 onnxruntime==1.19.2
+onnx==1.16.1
+# EZKL: install the binary from https://github.com/zkonduit/ezkl (releases); PyPI package may not be available on all platforms.
 joblib==1.4.2
+prometheus-client==0.21.0
+prometheus-fastapi-instrumentator==6.1.0

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Entrena un modelo churn sintético, lo guarda en pickle y opcionalmente lo sube vía API."""
+"""Train a synthetic churn model, save as pickle, optionally upload via API."""
 
 from __future__ import annotations
 
@@ -20,25 +20,25 @@ from app.models.examples.churn_model import train_churn_classifier
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Entrenar y exportar modelo churn")
-    p.add_argument("--out", default="churn_model.pkl", help="Ruta del pickle de salida")
+    p = argparse.ArgumentParser(description="Train and export churn model")
+    p.add_argument("--out", default="churn_model.pkl", help="Output pickle path")
     p.add_argument(
         "--upload-url",
         default=os.environ.get("COHORTLENS_UPLOAD_URL"),
-        help="POST multipart a esta URL (ej. http://localhost:8000/api/v1/models/upload)",
+        help="POST multipart to this URL (e.g. http://localhost:8000/api/v1/models/upload)",
     )
     p.add_argument("--name", default="Churn demo")
-    p.add_argument("--description", default="RandomForest churn (sintético)")
+    p.add_argument("--description", default="RandomForest churn (synthetic)")
     p.add_argument("--model-type", default="churn", dest="model_type")
     p.add_argument("--price-wei", type=int, default=0)
     args = p.parse_args()
 
     clf = train_churn_classifier()
     joblib.dump(clf, args.out)
-    print(f"Modelo guardado en {args.out}")
+    print(f"Model saved to {args.out}")
 
     if not args.upload_url:
-        print("Sin --upload-url / COHORTLENS_UPLOAD_URL: solo archivo local.")
+        print("No --upload-url / COHORTLENS_UPLOAD_URL: local file only.")
         return
 
     with open(args.out, "rb") as f:

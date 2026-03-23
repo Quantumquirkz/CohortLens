@@ -17,8 +17,13 @@ from app.services.blockchain_client import (
     build_prediction_input_bytes,
     get_oracle_contract,
     get_web3,
-    is_oracle_ready,
     request_prediction,
+)
+from app.services.cache import get_cached_cohort_response, set_cached_cohort_response
+from app.services.chain_manager import (
+    ChainManagerError,
+    get_chain_config,
+    is_oracle_configured_for_chain,
 )
 from app.services.graph_client import GraphClientError, fetch_user_metrics_for_block_range
 
@@ -29,15 +34,26 @@ router = APIRouter()
 async def discover_cohorts(request: CohortRequest) -> CohortResponse:
     """Discover user cohorts via K-Means clustering on subgraph-backed features."""
     try:
+        chain_cfg = get_chain_config(request.chain)
+    except ChainManagerError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    if not is_oracle_configured_for_chain(chain_cfg):
+        cached = get_cached_cohort_response(request)
+        if cached is not None:
+            return cached
+
+    try:
         users = await fetch_user_metrics_for_block_range(
             request.start_block,
             request.end_block,
             request.protocol,
+            subgraph_url=chain_cfg.subgraph_url,
         )
     except GraphClientError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
     except httpx.HTTPError as e:
-        raise HTTPException(status_code=502, detail=f"Error HTTP al consultar subgraph: {e}") from e
+        raise HTTPException(status_code=502, detail=f"HTTP error querying subgraph: {e}") from e
 
     loop = asyncio.get_running_loop()
     try:
@@ -50,12 +66,13 @@ async def discover_cohorts(request: CohortRequest) -> CohortResponse:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-    if not is_oracle_ready(settings):
+    if not is_oracle_configured_for_chain(chain_cfg):
+        set_cached_cohort_response(request, response, settings.COHORT_CACHE_TTL_SECONDS)
         return response
 
     try:
-        w3 = get_web3(settings.SEPOLIA_RPC_URL)
-        contract = get_oracle_contract(w3, settings.COHORT_ORACLE_ADDRESS)
+        w3 = get_web3(chain_cfg.rpc_url)
+        contract = get_oracle_contract(w3, chain_cfg.cohort_oracle_address)
         input_b = build_prediction_input_bytes(response)
         fulfill_b = build_fulfillment_bytes(response)
         req_id, tx_hex = request_prediction(
@@ -80,5 +97,5 @@ async def discover_cohorts(request: CohortRequest) -> CohortResponse:
     except Exception as e:
         raise HTTPException(
             status_code=502,
-            detail=f"No se pudo registrar la petición en el oracle: {e}",
+            detail=f"Could not register oracle request: {e}",
         ) from e
