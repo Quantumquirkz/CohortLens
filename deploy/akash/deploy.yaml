@@ -1,0 +1,54 @@
+---
+# Akash SDL v2 — replace REPLACE_* and image with your registry.
+# Docs: https://docs.akash.network/
+version: "2.0"
+
+services:
+  celery-worker:
+    image: cohortlens/backend-ai:latest
+    command:
+      - celery
+      - -A
+      - app.tasks.celery_app
+      - worker
+      - --loglevel=info
+      - -Q
+      - ml_tasks,prediction_tasks,zk_tasks
+    env:
+      - CELERY_BROKER_URL=redis://REPLACE_REDIS_HOST:6379/0
+      - CELERY_RESULT_BACKEND=redis://REPLACE_REDIS_HOST:6379/1
+      - REDIS_URL=redis://REPLACE_REDIS_HOST:6379/0
+      - DATABASE_URL=postgresql://user:pass@REPLACE_PG:5432/cohortlens
+      - IPFS_API_URL=http://REPLACE_IPFS:5001
+      - SEPOLIA_RPC_URL=https://rpc.sepolia.org
+      - COHORT_ORACLE_ADDRESS=
+      - ORACLE_OWNER_PRIVATE_KEY=
+
+profiles:
+  compute:
+    celery-worker:
+      resources:
+        cpu:
+          units: 1.0
+        memory:
+          size: 1Gi
+        storage:
+          - size: 5Gi
+            name: model-cache
+            attributes:
+              persistent: true
+  placement:
+    attributes:
+      host: akash
+    signedBy:
+      anyOf:
+        - "akash1365yvmc4s7awdyj3n2sav7pfgb9z2gafdbhcrs"
+    pricing:
+      celery-worker:
+        denom: uakt
+        amount: 5000
+
+deployment:
+  celery-worker:
+    profile: celery-worker
+    count: 1
