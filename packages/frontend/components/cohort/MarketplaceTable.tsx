@@ -34,7 +34,7 @@ export function MarketplaceTable({ models }: Props) {
             <th className="px-4 py-3 font-medium">Name</th>
             <th className="px-4 py-3 font-medium">Owner</th>
             <th className="px-4 py-3 font-medium">Format</th>
-            <th className="px-4 py-3 font-medium">Price (ETH)</th>
+            <th className="px-4 py-3 font-medium">Price (LENS)</th>
             <th className="px-4 py-3 font-medium text-right">Action</th>
           </tr>
         </thead>

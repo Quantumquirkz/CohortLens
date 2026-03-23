@@ -17,7 +17,7 @@ function weiToEthLabel(wei: number): string {
 
 export default function ModelDetailPage() {
   const params = useParams();
-  const idParam = params.id;
+  const idParam = params?.id;
   const id =
     typeof idParam === "string"
       ? Number.parseInt(idParam, 10)
@@ -92,7 +92,7 @@ export default function ModelDetailPage() {
               <div>
                 <dt className="text-slate-500">Price per query</dt>
                 <dd className="text-slate-200">
-                  {weiToEthLabel(model.price_per_query_wei)} ETH
+                  {weiToEthLabel(model.price_per_query_wei)} LENS
                 </dd>
               </div>
               <div>

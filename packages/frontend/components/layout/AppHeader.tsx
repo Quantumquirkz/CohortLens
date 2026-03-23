@@ -22,6 +22,12 @@ export function AppHeader() {
           <Link href="/dashboard" className={navLinkClass}>
             Dashboard
           </Link>
+          <Link href="/staking" className={navLinkClass}>
+            Staking
+          </Link>
+          <Link href="/governance" className={navLinkClass}>
+            Governance
+          </Link>
         </nav>
         <div className="shrink-0">
           <WalletButton />

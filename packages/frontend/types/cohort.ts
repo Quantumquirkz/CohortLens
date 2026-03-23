@@ -17,6 +17,9 @@ export interface CohortDiscoverRequest {
   end_block: number;
   num_clusters: number;
   features?: string[];
+  /** User-paid requestPrediction tx when backend REQUIRE_LENS_PAYMENT_FOR_DISCOVER */
+  payment_tx_hash?: string | null;
+  payment_requester?: string | null;
 }
 
 export interface CohortResponse {

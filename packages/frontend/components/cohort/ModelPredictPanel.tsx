@@ -1,9 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { formatEther } from "viem";
+import {
+  useAccount,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 
 import { fetchPredictionStatus, useModelPredict } from "@/hooks/useModelsApi";
+import { cohortOracleAbi, erc20Abi } from "@/lib/tokenomics-abi";
+import {
+  COHORT_ORACLE_ADDRESS,
+  LENS_TOKEN_ADDRESS,
+  tokenomicsConfigured,
+} from "@/lib/tokenomics-config";
 import type { LensPublic } from "@/types/model";
 
 type Props = {
@@ -39,10 +51,50 @@ function parseFeatures(input: string): number[] | null {
 }
 
 export function ModelPredictPanel({ model }: Props) {
+  const { address, isConnected } = useAccount();
   const [rawFeatures, setRawFeatures] = useState("0, 0, 0, 0");
   const [asyncMode, setAsyncMode] = useState(false);
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [lensPaymentDone, setLensPaymentDone] = useState(false);
   const predict = useModelPredict();
+
+  const priceWei = BigInt(Math.max(0, Math.trunc(model.price_per_query_wei)));
+  const needsLensPayment =
+    tokenomicsConfigured() && priceWei > BigInt(0) && model.active;
+  const canRunInference = !needsLensPayment || lensPaymentDone;
+
+  const payWrite = useWriteContract();
+  const payReceipt = useWaitForTransactionReceipt({ hash: payWrite.data });
+  const pendingAction = useRef<"approve" | "pay" | null>(null);
+
+  useEffect(() => {
+    if (payReceipt.isSuccess && pendingAction.current === "pay") {
+      setLensPaymentDone(true);
+      pendingAction.current = null;
+    }
+  }, [payReceipt.isSuccess]);
+
+  const approveOracle = () => {
+    if (!address || !needsLensPayment) return;
+    pendingAction.current = "approve";
+    payWrite.writeContract({
+      address: LENS_TOKEN_ADDRESS,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [COHORT_ORACLE_ADDRESS, priceWei],
+    });
+  };
+
+  const payOracleFee = () => {
+    if (!needsLensPayment) return;
+    pendingAction.current = "pay";
+    payWrite.writeContract({
+      address: COHORT_ORACLE_ADDRESS,
+      abi: cohortOracleAbi,
+      functionName: "requestPrediction",
+      args: [BigInt(model.id), "0x"],
+    });
+  };
 
   const features = useMemo(() => parseFeatures(rawFeatures), [rawFeatures]);
 
@@ -72,6 +124,9 @@ export function ModelPredictPanel({ model }: Props) {
     if (!features) {
       return;
     }
+    if (!canRunInference) {
+      return;
+    }
     void predict.mutateAsync({
       modelId: model.id,
       features,
@@ -91,6 +146,42 @@ export function ModelPredictPanel({ model }: Props) {
         Numeric vector (comma-separated or JSON). With a connected wallet, an
         EIP-191 signature is sent if the backend requires it.
       </p>
+
+      {needsLensPayment && (
+        <div className="mt-6 rounded-lg border border-amber-900/50 bg-amber-950/20 p-4">
+          <p className="text-sm font-medium text-amber-100">On-chain LENS fee</p>
+          <p className="mt-1 text-xs text-amber-200/90">
+            Approve and pay {formatEther(priceWei)} LENS to the oracle before running inference
+            (matches registry price for this model).
+          </p>
+          {!isConnected && (
+            <p className="mt-2 text-xs text-amber-300">Connect your wallet to pay.</p>
+          )}
+          {isConnected && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void approveOracle()}
+                disabled={payWrite.isPending || lensPaymentDone}
+                className="rounded-lg bg-amber-700 px-3 py-1.5 text-xs text-white hover:bg-amber-600 disabled:opacity-50"
+              >
+                Approve LENS
+              </button>
+              <button
+                type="button"
+                onClick={() => void payOracleFee()}
+                disabled={payWrite.isPending || lensPaymentDone}
+                className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs text-white hover:bg-amber-500 disabled:opacity-50"
+              >
+                Confirm payment
+              </button>
+              {lensPaymentDone && (
+                <span className="text-xs text-emerald-300">Payment recorded on-chain.</span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <label className="block">
@@ -118,10 +209,14 @@ export function ModelPredictPanel({ model }: Props) {
 
         <button
           type="submit"
-          disabled={!features || predict.isPending}
+          disabled={!features || predict.isPending || !canRunInference}
           className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {predict.isPending ? "Running…" : "Run prediction"}
+          {predict.isPending
+            ? "Running…"
+            : !canRunInference
+              ? "Pay LENS fee first"
+              : "Run prediction"}
         </button>
       </form>
 

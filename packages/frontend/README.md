@@ -22,6 +22,12 @@ Create `.env.local` in this directory (or set variables in your orchestrator):
 | -------- | ----------- |
 | `NEXT_PUBLIC_API_URL` | API base URL. Default: `http://localhost:8000`. The client calls `{NEXT_PUBLIC_API_URL}/api/v1/cohorts/discover`. |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | (Optional, later phases) Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com) if you add the WalletConnect connector. |
+| `NEXT_PUBLIC_LENS_TOKEN_ADDRESS` | LENS ERC20 (Phase 7). |
+| `NEXT_PUBLIC_STAKING_ADDRESS` | Staking contract. |
+| `NEXT_PUBLIC_COHORT_ORACLE_ADDRESS` | Oracle (on-chain prediction fee + `requestPrediction`). |
+| `NEXT_PUBLIC_COHORT_GOVERNOR_ADDRESS` | Governor (proposals / voting UI). |
+
+Phase 7 also adds **Pages Router** routes (`pages/staking.tsx`, `pages/governance.tsx`) wrapped by `pages/_app.tsx` with the same Wagmi providers as `app/`. Set the `NEXT_PUBLIC_*` addresses after deploying contracts (e.g. Anvil or Sepolia).
 
 Example:
 
