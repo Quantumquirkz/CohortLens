@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
-
 from app.core.config import settings
+from fastapi import FastAPI
 
 
 def setup_prometheus(app: FastAPI) -> None:

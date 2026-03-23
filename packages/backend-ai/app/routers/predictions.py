@@ -5,13 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.limiter import limiter
 from app.deps.auth_wallet import optional_wallet_auth
+from app.limiter import limiter
 from app.models.registry import ModelRegistry, ModelRegistryError
 from app.schemas.predictions_api import (
     AsyncPredictAccepted,
-    AsyncPredictionTaskStatus,
     AsyncPredictEnqueue,
+    AsyncPredictionTaskStatus,
 )
 from app.services.async_prediction import enqueue_predict
 from app.tasks.celery_app import celery_app

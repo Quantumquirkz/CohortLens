@@ -56,6 +56,9 @@ contract CohortOracle is Ownable, ReentrancyGuard {
     error LensInactive(uint256 lensId);
     error InvalidFeeParams();
     error ZeroPrice();
+    error InvalidRequest(uint256 requestId);
+    error RequestAlreadyFulfilled(uint256 requestId);
+    error ProofAlreadyRegistered(uint256 requestId);
 
     constructor(
         IERC20 lensToken_,
@@ -140,12 +143,18 @@ contract CohortOracle is Ownable, ReentrancyGuard {
     }
 
     function fulfillRequest(uint256 requestId, bytes calldata result) external onlyOwner {
-        requests[requestId].fulfilled = true;
-        requests[requestId].result = result;
+        if (requestId == 0 || requestId > requestCount) revert InvalidRequest(requestId);
+        Request storage req = requests[requestId];
+        if (req.fulfilled) revert RequestAlreadyFulfilled(requestId);
+        req.fulfilled = true;
+        req.result = result;
         emit PredictionFulfilled(requestId, result);
     }
 
     function registerPredictionProofHash(uint256 requestId, bytes32 proofHash) external onlyOwner {
+        if (requestId == 0 || requestId > requestCount) revert InvalidRequest(requestId);
+        if (!requests[requestId].fulfilled) revert RequestNotFulfilled(requestId);
+        if (predictionProofHashes[requestId] != bytes32(0)) revert ProofAlreadyRegistered(requestId);
         predictionProofHashes[requestId] = proofHash;
         emit PredictionProofHashRegistered(requestId, proofHash);
     }

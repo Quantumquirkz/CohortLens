@@ -1,11 +1,11 @@
-fastapi==0.104.1
-python-multipart==0.0.9
+fastapi==0.135.2
+python-multipart==0.0.22
 uvicorn[standard]==0.24.0
-scikit-learn==1.4.2
+scikit-learn==1.5.0
 numpy==1.26.4
 pandas==2.2.2
-pydantic==2.5.0
-pydantic-settings==2.1.0
+pydantic==2.11.7
+pydantic-settings==2.10.1
 python-dotenv==1.0.0
 httpx==0.25.1
 web3==6.15.1
@@ -16,7 +16,7 @@ alembic==1.14.0
 psycopg2-binary==2.9.10
 slowapi==0.1.9
 onnxruntime==1.19.2
-onnx==1.16.1
+onnx==1.17.0
 # EZKL: install the binary from https://github.com/zkonduit/ezkl (releases); PyPI package may not be available on all platforms.
 joblib==1.4.2
 prometheus-client==0.21.0

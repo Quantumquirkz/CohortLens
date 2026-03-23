@@ -1,6 +1,5 @@
 """Schemas for cohort discovery API."""
 
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -18,7 +17,7 @@ class Cohort(BaseModel):
     id: int
     size: int
     center: dict[str, float]
-    users: Optional[list[UserProfile]] = None
+    users: list[UserProfile] | None = None
 
 
 def _default_features() -> list[str]:

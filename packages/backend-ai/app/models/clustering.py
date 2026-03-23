@@ -35,7 +35,7 @@ def perform_clustering(
     centers = kmeans.cluster_centers_
 
     clusters: dict[int, list[dict[str, Any]]] = {i: [] for i in range(n_clusters)}
-    for label, user in zip(labels, users):
+    for label, user in zip(labels, users, strict=False):
         clusters[label].append(user)
 
     cohort_list = []

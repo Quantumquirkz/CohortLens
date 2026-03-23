@@ -2,7 +2,17 @@
 
 from celery.result import AsyncResult
 from eth_account import Account
-from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Query, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from web3 import Web3
@@ -20,17 +30,22 @@ from app.models.registry import (
 )
 from app.schemas.models_api import (
     LensPublic,
+    LensUploadResponse,
     PredictRequest,
     PredictResponse,
     PredictTaskStatus,
-    LensUploadResponse,
 )
-from app.services.blockchain_client import get_web3
-from app.services.ipfs_client import IpfsError, add_bytes
-from app.services.chain_manager import ChainManagerError, get_chain_config
-from app.services.registry_contract import get_lens, get_registry_contract, lens_count, register_lens
-from app.services.token_client import balance_of_staked, min_stake_to_register
 from app.services.async_prediction import enqueue_predict
+from app.services.blockchain_client import get_web3
+from app.services.chain_manager import ChainManagerError, get_chain_config
+from app.services.ipfs_client import IpfsError, add_bytes
+from app.services.registry_contract import (
+    get_lens,
+    get_registry_contract,
+    lens_count,
+    register_lens,
+)
+from app.services.token_client import balance_of_staked, min_stake_to_register
 from app.tasks.celery_app import celery_app
 
 router = APIRouter()

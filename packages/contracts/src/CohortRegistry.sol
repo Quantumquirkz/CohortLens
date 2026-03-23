@@ -34,6 +34,7 @@ contract CohortRegistry is Ownable {
 
     error NotLensOwner();
     error InsufficientStake(uint256 staked, uint256 required);
+    error ZeroPrice();
 
     modifier onlyLensOwner(uint256 id) {
         if (msg.sender != lenses[id].owner) revert NotLensOwner();
@@ -61,6 +62,7 @@ contract CohortRegistry is Ownable {
     ) external returns (uint256) {
         uint256 st = staking.balanceOfStaked(msg.sender);
         if (st < minStakeToRegister) revert InsufficientStake(st, minStakeToRegister);
+        if (pricePerQuery == 0) revert ZeroPrice();
 
         ++lensCount;
         uint256 id = lensCount;
@@ -86,6 +88,7 @@ contract CohortRegistry is Ownable {
         string calldata description,
         uint256 pricePerQuery
     ) external onlyLensOwner(id) {
+        if (pricePerQuery == 0) revert ZeroPrice();
         lenses[id].name = name;
         lenses[id].description = description;
         lenses[id].pricePerQuery = pricePerQuery;

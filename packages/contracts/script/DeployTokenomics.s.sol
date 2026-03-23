@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 import {LensToken} from "../src/LensToken.sol";
 import {CohortTimelock} from "../src/CohortTimelock.sol";
 import {CohortGovernor} from "../src/CohortGovernor.sol";
@@ -74,11 +74,5 @@ contract DeployTokenomics is Script {
 
         vm.stopBroadcast();
 
-        console.log("LensToken:", address(lens));
-        console.log("CohortTimelock:", address(timelock));
-        console.log("CohortGovernor:", address(governor));
-        console.log("Staking:", address(staking));
-        console.log("CohortRegistry:", address(registry));
-        console.log("CohortOracle:", address(oracle));
     }
 }

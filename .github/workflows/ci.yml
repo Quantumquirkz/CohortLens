@@ -88,10 +88,15 @@ jobs:
           pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Ruff
-        run: ruff check tests
+        run: ruff check app tests
 
       - name: Pytest
         run: pytest
+
+      - name: pip-audit
+        run: |
+          python -m pip install pip-audit
+          pip-audit -r requirements.txt -r requirements-dev.txt --ignore-vuln CVE-2026-28500
 
   frontend:
     runs-on: ubuntu-latest
@@ -111,8 +116,10 @@ jobs:
         run: |
           npm ci
           npm run lint
+          npx tsc --noEmit
           npm test -- --ci
           npm run build
+          npm audit --omit=dev
 
   docs:
     runs-on: ubuntu-latest
@@ -128,8 +135,30 @@ jobs:
 
       - name: Build docs
         run: |
-          npm install
+          npm ci
           npm run build
+          npm audit --omit=dev
+
+  indexer:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/indexers/protocols/aave-v3/polygon
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: packages/indexers/protocols/aave-v3/polygon/package-lock.json
+
+      - name: Build subgraph
+        run: |
+          npm ci
+          npm run codegen
+          npm run build
+          npm audit --omit=dev
 
   docker:
     runs-on: ubuntu-latest

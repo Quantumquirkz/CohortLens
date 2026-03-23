@@ -19,6 +19,7 @@ import {
 export default function StakingPage() {
   const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState("10");
+  const [inputError, setInputError] = useState<string | null>(null);
 
   const staked = useReadContract({
     address: STAKING_ADDRESS,
@@ -41,9 +42,25 @@ export default function StakingPage() {
     hash,
   });
 
+  const parseAmount = (): bigint | null => {
+    try {
+      const value = parseEther(amount.trim());
+      if (value <= 0n) {
+        setInputError("Amount must be greater than 0.");
+        return null;
+      }
+      setInputError(null);
+      return value;
+    } catch {
+      setInputError("Invalid amount format.");
+      return null;
+    }
+  };
+
   const approveAndStake = () => {
     if (!address || !tokenomicsConfigured()) return;
-    const value = parseEther(amount);
+    const value = parseAmount();
+    if (value === null) return;
     writeContract({
       address: LENS_TOKEN_ADDRESS,
       abi: erc20Abi,
@@ -54,7 +71,8 @@ export default function StakingPage() {
 
   const stakeAfterApprove = () => {
     if (!address || !tokenomicsConfigured()) return;
-    const value = parseEther(amount);
+    const value = parseAmount();
+    if (value === null) return;
     writeContract({
       address: STAKING_ADDRESS,
       abi: stakingAbi,
@@ -65,7 +83,8 @@ export default function StakingPage() {
 
   const withdraw = () => {
     if (!address || !tokenomicsConfigured()) return;
-    const value = parseEther(amount);
+    const value = parseAmount();
+    if (value === null) return;
     writeContract({
       address: STAKING_ADDRESS,
       abi: stakingAbi,
@@ -119,10 +138,16 @@ export default function StakingPage() {
             <input
               type="text"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                if (inputError) {
+                  setInputError(null);
+                }
+              }}
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-white"
             />
           </label>
+          {inputError && <p className="text-sm text-red-300">{inputError}</p>}
 
           <div className="flex flex-wrap gap-2">
             <button

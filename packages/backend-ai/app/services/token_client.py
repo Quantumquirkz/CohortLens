@@ -84,9 +84,9 @@ def verify_prediction_payment_tx(
             lid = int(args["lensId"])
             req = args["requester"]
         else:
-            rid = int(getattr(args, "requestId"))
-            lid = int(getattr(args, "lensId"))
-            req = getattr(args, "requester")
+            rid = int(args.requestId)
+            lid = int(args.lensId)
+            req = args.requester
         if lid != expected_lens_id:
             msg = f"lensId mismatch: chain has {lid}, expected {expected_lens_id}"
             raise ValueError(msg)

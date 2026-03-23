@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: cohortlens
-      POSTGRES_PASSWORD: cohortlens
-      POSTGRES_DB: cohortlens
+      POSTGRES_USER: ${POSTGRES_USER:-cohortlens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: ${POSTGRES_DB:-cohortlens}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cohortlens -d cohortlens"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cohortlens} -d ${POSTGRES_DB:-cohortlens}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -18,15 +18,15 @@ services:
   postgres-graph:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: graph-node
-      POSTGRES_PASSWORD: let-me-in
-      POSTGRES_DB: graph-node
+      POSTGRES_USER: ${GRAPH_POSTGRES_USER:-graph-node}
+      POSTGRES_PASSWORD: ${GRAPH_POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: ${GRAPH_POSTGRES_DB:-graph-node}
     ports:
       - "5433:5432"
     volumes:
       - postgres_graph_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U graph-node -d graph-node"]
+      test: ["CMD-SHELL", "pg_isready -U ${GRAPH_POSTGRES_USER:-graph-node} -d ${GRAPH_POSTGRES_DB:-graph-node}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -65,9 +65,9 @@ services:
       - "8040:8040"
     environment:
       postgres_host: postgres-graph
-      postgres_user: graph-node
-      postgres_pass: let-me-in
-      postgres_db: graph-node
+      postgres_user: ${GRAPH_POSTGRES_USER:-graph-node}
+      postgres_pass: ${GRAPH_POSTGRES_PASSWORD:-change-me}
+      postgres_db: ${GRAPH_POSTGRES_DB:-graph-node}
       ipfs: "ipfs:5001"
       # Point to your Polygon RPC; placeholder for local subgraph development.
       ethereum: "polygon:${POLYGON_RPC_URL:-https://polygon-rpc.com/}"

@@ -58,7 +58,7 @@ contract CohortRegistryTest is Test {
         staking.setStaked(alice, 2 ether);
         vm.prank(alice);
         vm.recordLogs();
-        registry.registerLens("My Lens", "Desc", "hash", 0);
+        registry.registerLens("My Lens", "Desc", "hash", 1 ether);
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries.length, 1);
         assertEq(entries[0].topics[0], keccak256("LensRegistered(uint256,address,string)"));
@@ -81,7 +81,7 @@ contract CohortRegistryTest is Test {
     function test_SetLensActive() public {
         staking.setStaked(alice, 2 ether);
         vm.prank(alice);
-        registry.registerLens("Lens", "Desc", "hash", 0);
+        registry.registerLens("Lens", "Desc", "hash", 1 ether);
 
         vm.prank(alice);
         registry.setLensActive(1, false);
@@ -98,20 +98,37 @@ contract CohortRegistryTest is Test {
     function test_UpdateLens_RevertsWhenNotOwner() public {
         staking.setStaked(alice, 2 ether);
         vm.prank(alice);
-        registry.registerLens("Alice Lens", "Desc", "hash", 0);
+        registry.registerLens("Alice Lens", "Desc", "hash", 1 ether);
 
         vm.prank(bob);
         vm.expectRevert(CohortRegistry.NotLensOwner.selector);
-        registry.updateLens(1, "Hacked", "Hacked", 0);
+        registry.updateLens(1, "Hacked", "Hacked", 1 ether);
     }
 
     function test_SetLensActive_RevertsWhenNotOwner() public {
         staking.setStaked(alice, 2 ether);
         vm.prank(alice);
-        registry.registerLens("Alice Lens", "Desc", "hash", 0);
+        registry.registerLens("Alice Lens", "Desc", "hash", 1 ether);
 
         vm.prank(bob);
         vm.expectRevert(CohortRegistry.NotLensOwner.selector);
         registry.setLensActive(1, false);
+    }
+
+    function test_RegisterLens_RevertsOnZeroPrice() public {
+        staking.setStaked(alice, 2 ether);
+        vm.prank(alice);
+        vm.expectRevert(CohortRegistry.ZeroPrice.selector);
+        registry.registerLens("Zero", "Desc", "hash", 0);
+    }
+
+    function test_UpdateLens_RevertsOnZeroPrice() public {
+        staking.setStaked(alice, 2 ether);
+        vm.prank(alice);
+        registry.registerLens("Lens", "Desc", "hash", 1 ether);
+
+        vm.prank(alice);
+        vm.expectRevert(CohortRegistry.ZeroPrice.selector);
+        registry.updateLens(1, "Lens", "Desc", 0);
     }
 }

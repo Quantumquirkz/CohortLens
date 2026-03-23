@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from decimal import Decimal
 from typing import Any, TypedDict
@@ -117,6 +118,7 @@ async def _fetch_entity_pages(
     out: list[_OpRow] = []
     skip = 0
     first = settings.SUBGRAPH_PAGE_SIZE
+    max_rows = settings.SUBGRAPH_MAX_ROWS
     start_s = str(start_block)
     end_s = str(end_block)
 
@@ -141,6 +143,15 @@ async def _fetch_entity_pages(
             raise GraphClientError(f"Unexpected response for entity {entity}")
         for row in batch:
             out.append(row)  # type: ignore[arg-type]
+        if len(out) >= max_rows:
+            logging.getLogger(__name__).warning(
+                "Subgraph row limit reached for %s: %s rows (from %s to %s)",
+                entity,
+                max_rows,
+                start_block,
+                end_block,
+            )
+            break
         if len(batch) < first:
             break
         skip += first
@@ -205,7 +216,7 @@ async def fetch_user_metrics_for_block_range(
         users.append(
             {
                 "address": address,
-                "tx_count": float(tx_c),
+                "tx_count": tx_c,
                 "volume": float(m["volume"]),
                 "avg_gas": avg_gas,
             },

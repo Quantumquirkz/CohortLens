@@ -8,7 +8,7 @@ from typing import Annotated
 import redis
 from eth_account import Account
 from eth_account.messages import encode_defunct
-from fastapi import Depends, Header, HTTPException, Request
+from fastapi import Header, HTTPException, Request
 
 from app.core.config import settings
 

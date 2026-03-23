@@ -118,9 +118,40 @@ contract CohortOracleTest is Test {
     function test_RegisterPredictionProofHash() public {
         vm.prank(alice);
         oracle.requestPrediction(1, hex"ab");
+        oracle.fulfillRequest(1, hex"01");
 
         bytes32 h = keccak256("zk-proof");
         oracle.registerPredictionProofHash(1, h);
         assertEq(oracle.predictionProofHashes(1), h);
+    }
+
+    function test_FulfillRequest_RevertsForInvalidRequest() public {
+        vm.expectRevert(abi.encodeWithSelector(CohortOracle.InvalidRequest.selector, 1));
+        oracle.fulfillRequest(1, hex"01");
+    }
+
+    function test_FulfillRequest_RevertsWhenAlreadyFulfilled() public {
+        vm.prank(alice);
+        oracle.requestPrediction(1, hex"ab");
+        oracle.fulfillRequest(1, hex"01");
+        vm.expectRevert(abi.encodeWithSelector(CohortOracle.RequestAlreadyFulfilled.selector, 1));
+        oracle.fulfillRequest(1, hex"02");
+    }
+
+    function test_RegisterPredictionProofHash_RevertsWhenNotFulfilled() public {
+        vm.prank(alice);
+        oracle.requestPrediction(1, hex"ab");
+        vm.expectRevert(abi.encodeWithSelector(CohortOracle.RequestNotFulfilled.selector, 1));
+        oracle.registerPredictionProofHash(1, keccak256("p"));
+    }
+
+    function test_RegisterPredictionProofHash_RevertsOnOverwrite() public {
+        vm.prank(alice);
+        oracle.requestPrediction(1, hex"ab");
+        oracle.fulfillRequest(1, hex"01");
+        bytes32 first = keccak256("first");
+        oracle.registerPredictionProofHash(1, first);
+        vm.expectRevert(abi.encodeWithSelector(CohortOracle.ProofAlreadyRegistered.selector, 1));
+        oracle.registerPredictionProofHash(1, keccak256("second"));
     }
 }

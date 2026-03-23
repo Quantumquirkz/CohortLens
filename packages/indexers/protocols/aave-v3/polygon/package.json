@@ -6,9 +6,9 @@
     "build": "graph build"
   },
   "dependencies": {
-    "@graphprotocol/graph-ts": "0.35.1"
+    "@graphprotocol/graph-ts": "^0.38.2"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "0.97.0"
+    "@graphprotocol/graph-cli": "^0.98.1"
   }
 }

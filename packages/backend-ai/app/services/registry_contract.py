@@ -84,7 +84,7 @@ def _parse_lens_id_from_logs(w3: Web3, receipt: Any, registry_address: str) -> i
 def get_lens(w3: Web3, contract: Contract, lens_id: int) -> dict[str, Any]:
     """Return the Lens struct as a Python dict."""
     t = contract.functions.getLens(lens_id).call()
-    if isinstance(t, (list, tuple)) and len(t) >= 8:
+    if isinstance(t, list | tuple) and len(t) >= 8:
         return {
             "id": int(t[0]),
             "owner": t[1],
@@ -96,14 +96,14 @@ def get_lens(w3: Web3, contract: Contract, lens_id: int) -> dict[str, Any]:
             "createdAt": int(t[7]),
         }
     return {
-        "id": int(getattr(t, "id")),
-        "owner": getattr(t, "owner"),
-        "name": getattr(t, "name"),
-        "description": getattr(t, "description"),
-        "modelHash": getattr(t, "modelHash"),
-        "pricePerQuery": int(getattr(t, "pricePerQuery")),
-        "active": bool(getattr(t, "active")),
-        "createdAt": int(getattr(t, "createdAt")),
+        "id": int(t.id),
+        "owner": t.owner,
+        "name": t.name,
+        "description": t.description,
+        "modelHash": t.modelHash,
+        "pricePerQuery": int(t.pricePerQuery),
+        "active": bool(t.active),
+        "createdAt": int(t.createdAt),
     }
 
 

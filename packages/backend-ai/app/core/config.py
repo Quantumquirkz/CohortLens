@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     )
     SUBGRAPH_TIMEOUT_SECONDS: float = 60.0
     SUBGRAPH_PAGE_SIZE: int = 1000
+    SUBGRAPH_MAX_ROWS: int = 100_000
 
     SEPOLIA_RPC_URL: str = "https://rpc.sepolia.org"
     COHORT_ORACLE_ADDRESS: str = ""
@@ -128,7 +129,7 @@ class Settings(BaseSettings):
         return {
             "polygon": ChainConfig(
                 subgraph_url=self.SUBGRAPH_URL,
-                rpc_url=self.SEPOLIA_RPC_URL or self.WEB3_RPC,
+                rpc_url=self.WEB3_RPC,
                 cohort_oracle_address=self.COHORT_ORACLE_ADDRESS,
                 cohort_registry_address=self.COHORT_REGISTRY_ADDRESS,
             ),

@@ -27,6 +27,7 @@ export default function GovernancePage() {
   const [proposals, setProposals] = useState<ProposalRow[]>([]);
   const [manualId, setManualId] = useState("1");
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [voteError, setVoteError] = useState<string | null>(null);
 
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
@@ -77,7 +78,13 @@ export default function GovernancePage() {
 
   const vote = (support: number) => {
     if (!governanceConfigured()) return;
-    const id = BigInt(manualId);
+    const normalized = manualId.trim();
+    if (!/^\d+$/.test(normalized)) {
+      setVoteError("Proposal ID must be a positive integer.");
+      return;
+    }
+    const id = BigInt(normalized);
+    setVoteError(null);
     writeContract({
       address: COHORT_GOVERNOR_ADDRESS,
       abi: governorAbi,
@@ -147,10 +154,16 @@ export default function GovernancePage() {
           <input
             type="text"
             value={manualId}
-            onChange={(e) => setManualId(e.target.value)}
+            onChange={(e) => {
+              setManualId(e.target.value);
+              if (voteError) {
+                setVoteError(null);
+              }
+            }}
             className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-white"
           />
         </label>
+        {voteError && <p className="mt-2 text-sm text-red-300">{voteError}</p>}
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
