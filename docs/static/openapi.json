@@ -1,0 +1,20 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CohortLens AI Backend",
+    "version": "0.3.0",
+    "description": "Placeholder OpenAPI spec. Run the backend and execute `npm run sync-openapi` from `docs/` to refresh."
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

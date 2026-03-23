@@ -89,3 +89,12 @@
 
 - Inline dynamic `import()` inside components for libraries that belong at the top of the file.
 - Bypass React Query for duplicated fetch logic when mutations/queries are already standardized in hooks.
+
+## Phase 8 — Production and open source
+
+- **Secrets**: never commit secrets or private keys. Use environment variables, GitHub Actions secrets, and secret managers only. Document non-secret variable names in `.env.example` / `.env.production.example`.
+- **Structured logging**: in production, prefer JSON logs (e.g. `structlog` or JSON `Formatter`) with consistent fields (`level`, `message`, `timestamp`); set log level via `LOG_LEVEL`.
+- **Observability**: keep **Prometheus** metrics for HTTP and queues; add **Sentry** for error tracking when `SENTRY_DSN` is set (`SENTRY_ENVIRONMENT` for staging/production). Do not log PII or raw request bodies to third parties.
+- **Versioning**: follow **SemVer** for releases (`vMAJOR.MINOR.PATCH`); use **git-cliff** and [RELEASE.md](RELEASE.md) for changelog and tagging. Contract deployments are recorded under `packages/contracts/deployments/`.
+- **Documentation site**: maintain the Docusaurus project under [docs/](docs/) (architecture, deployment, API reference, security). See [.cursor/skills/cohortlens-production-docs/SKILL.md](.cursor/skills/cohortlens-production-docs/SKILL.md).
+- **CI/CD**: GitHub Actions runs tests, linters, Slither/Mythril (policy in [docs/docs/security.md](docs/docs/security.md)), and Docker builds. Prefer manual approval and multisig (e.g. Gnosis Safe) for mainnet operations over long-lived keys in CI.
