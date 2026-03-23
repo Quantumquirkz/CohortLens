@@ -1,0 +1,10 @@
+{
+  "name": "cohortlens-contracts",
+  "private": true,
+  "scripts": {
+    "lint:sol": "solhint 'src/**/*.sol' 'script/**/*.sol'"
+  },
+  "devDependencies": {
+    "solhint": "^5.0.3"
+  }
+}
