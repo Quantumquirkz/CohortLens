@@ -1,5 +1,7 @@
 """Application configuration via environment variables."""
 
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,7 +11,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    DATABASE_URL: str = "postgresql://user:pass@localhost/db"
+    DATABASE_URL: str = "postgresql://cohortlens:cohortlens@localhost:5432/cohortlens"
     REDIS_URL: str = "redis://localhost:6379/0"
 
     WEB3_RPC: str = "https://polygon-rpc.com"
@@ -34,6 +36,16 @@ class Settings(BaseSettings):
     ORACLE_SCAN_CHUNK_BLOCKS: int = 2000
     ORACLE_PENDING_TTL_SECONDS: int = 86400
     ORACLE_FROM_BLOCK: int = 0
+
+    IPFS_API_URL: str = "http://127.0.0.1:5001"
+    COHORT_REGISTRY_ADDRESS: str = ""
+    REGISTRY_UPLOADER_PRIVATE_KEY: str = ""
+    MODEL_CACHE_DIR: Path = Field(default=Path("/tmp/cohortlens_models"))
+    MAX_UPLOAD_BYTES: int = 50 * 1024 * 1024
+
+    REQUIRE_WALLET_AUTH: bool = False
+    RATE_LIMIT_DEFAULT: str = "60/minute"
+    RATE_LIMIT_PREDICT: str = "20/minute"
 
 
 settings = Settings()

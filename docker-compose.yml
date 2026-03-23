@@ -88,11 +88,21 @@ services:
       COHORT_ORACLE_ADDRESS: ${COHORT_ORACLE_ADDRESS:-}
       COHORT_LENS_ID: ${COHORT_LENS_ID:-0}
       ORACLE_REQUESTER_PRIVATE_KEY: ${ORACLE_REQUESTER_PRIVATE_KEY:-}
+      IPFS_API_URL: http://ipfs:5001
+      COHORT_REGISTRY_ADDRESS: ${COHORT_REGISTRY_ADDRESS:-}
+      REGISTRY_UPLOADER_PRIVATE_KEY: ${REGISTRY_UPLOADER_PRIVATE_KEY:-}
+      MODEL_CACHE_DIR: /var/cache/cohortlens-models
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-52428800}
+      REQUIRE_WALLET_AUTH: ${REQUIRE_WALLET_AUTH:-false}
+    volumes:
+      - model_cache:/var/cache/cohortlens-models
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      ipfs:
+        condition: service_started
       graph-node:
         condition: service_started
 
@@ -102,6 +112,7 @@ services:
       dockerfile: Dockerfile
     command: celery -A app.worker.celery_app worker --loglevel=info
     environment:
+      DATABASE_URL: postgresql://cohortlens:cohortlens@postgres:5432/cohortlens
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
@@ -110,9 +121,18 @@ services:
       ORACLE_OWNER_PRIVATE_KEY: ${ORACLE_OWNER_PRIVATE_KEY:-}
       ORACLE_FROM_BLOCK: ${ORACLE_FROM_BLOCK:-0}
       ORACLE_SCAN_CHUNK_BLOCKS: ${ORACLE_SCAN_CHUNK_BLOCKS:-2000}
+      IPFS_API_URL: http://ipfs:5001
+      COHORT_REGISTRY_ADDRESS: ${COHORT_REGISTRY_ADDRESS:-}
+      MODEL_CACHE_DIR: /var/cache/cohortlens-models
+    volumes:
+      - model_cache:/var/cache/cohortlens-models
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
+      ipfs:
+        condition: service_started
 
   celery-beat:
     build:
@@ -140,9 +160,11 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
 
 volumes:
   postgres_data:
   postgres_graph_data:
   redis_data:
   ipfs_data:
+  model_cache:

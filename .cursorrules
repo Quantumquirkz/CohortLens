@@ -22,6 +22,14 @@
 - Estado asíncrono fuera del request: **Celery** con broker/backend **Redis**; tareas idempotentes; punteros de bloque en Redis o DB para scanners de eventos.
 - Claves privadas (`ORACLE_OWNER_PRIVATE_KEY`, firmantes de transacciones) solo en variables de entorno, nunca en código ni en imágenes públicas.
 
+## Modelos de IA y marketplace (`packages/backend-ai`)
+
+- Los artefactos de modelo se publican en **IPFS** (CID); el contrato `CohortRegistry` almacena `modelHash` (string con CID o ruta IPFS).
+- Formatos admitidos para inferencia: **pickle/joblib (scikit-learn)** y **ONNX** (`onnxruntime`). El pickle es intrínsecamente inseguro si la fuente no es confiable: solo modelos auditados o generados por el propio operador.
+- Inferencia y entrenamiento pesados van a **Celery** (misma app que `app/worker/celery_app.py`, tareas en `app/tasks/model_tasks.py`).
+- Endpoints de predicción deben soportar **autenticación por firma de wallet** (mensaje con nonce, EIP-191) cuando `REQUIRE_WALLET_AUTH=true`, y **rate limiting** (p. ej. SlowAPI) en rutas sensibles.
+- Metadatos adicionales (tipo de modelo: churn, LTV, etc.) pueden vivir en Postgres; el contrato ya incluye `name` y `description`.
+
 ---
 
 # CohortLens — Frontend (packages/frontend)
@@ -59,6 +67,7 @@
 
 - Base URL: `process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"`.
 - Cohort discovery: `POST /api/v1/cohorts/discover` — request/response types live in `types/cohort.ts` and must match the FastAPI schemas.
+- Marketplace de modelos: rutas bajo `app/marketplace/`, `app/models/[id]/` — tipos en `types/models.ts` alineados con `/api/v1/models`.
 
 ## Do not
 

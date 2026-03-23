@@ -8,7 +8,7 @@ celery_app = Celery(
     "cohortlens",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["app.worker.tasks"],
+    include=["app.worker.tasks", "app.tasks.model_tasks"],
 )
 
 celery_app.conf.update(
@@ -26,4 +26,5 @@ celery_app.conf.beat_schedule = {
     },
 }
 
-import app.worker.tasks  # noqa: E402,F401 — registra tareas al importar el módulo
+import app.worker.tasks  # noqa: E402,F401
+import app.tasks.model_tasks  # noqa: E402,F401

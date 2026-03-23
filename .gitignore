@@ -28,11 +28,11 @@ build/
 .next/
 out/
 
-# Foundry
+# Foundry (no usar `lib/` global: ignoraría packages/frontend/lib)
 out/
 cache/
 broadcast/
-lib/
+packages/contracts/lib/
 
 # Testing / coverage
 coverage/
