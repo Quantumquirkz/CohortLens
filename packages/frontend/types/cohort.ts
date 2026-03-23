@@ -11,6 +11,8 @@ export interface Cohort {
 
 export interface CohortDiscoverRequest {
   protocol: string;
+  /** Logical chain (e.g. polygon, ethereum); must exist in backend CHAINS_JSON */
+  chain?: string;
   start_block: number;
   end_block: number;
   num_clusters: number;

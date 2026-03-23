@@ -1,70 +1,70 @@
 # CohortLens — Frontend
 
-Aplicación **Next.js 14** (App Router) con **TypeScript**, **Tailwind CSS**, **Wagmi** + **Viem**, **TanStack React Query** y **Axios** para descubrir cohortes vía el backend FastAPI.
+**Next.js 14** (App Router) app with **TypeScript**, **Tailwind CSS**, **Wagmi** + **Viem**, **TanStack React Query**, and **Axios** for cohort discovery via the FastAPI backend.
 
-## Requisitos
+## Requirements
 
 - Node.js 18+
-- Backend CohortLens en ejecución (por defecto `http://localhost:8000`) para probar el dashboard
+- CohortLens backend running (default `http://localhost:8000`) to exercise the dashboard
 
-## Instalación
+## Install
 
 ```bash
 cd packages/frontend
 npm install
 ```
 
-## Variables de entorno
+## Environment variables
 
-Crea `.env.local` en este directorio (o define las variables en tu orquestador):
+Create `.env.local` in this directory (or set variables in your orchestrator):
 
-| Variable | Descripción |
+| Variable | Description |
 | -------- | ----------- |
-| `NEXT_PUBLIC_API_URL` | URL base del API. Por defecto: `http://localhost:8000`. El cliente llama a `{NEXT_PUBLIC_API_URL}/api/v1/cohorts/discover`. |
-| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | (Opcional, fases posteriores) ID de proyecto en [WalletConnect Cloud](https://cloud.walletconnect.com) si añades el conector WalletConnect. |
+| `NEXT_PUBLIC_API_URL` | API base URL. Default: `http://localhost:8000`. The client calls `{NEXT_PUBLIC_API_URL}/api/v1/cohorts/discover`. |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | (Optional, later phases) Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com) if you add the WalletConnect connector. |
 
-Ejemplo:
+Example:
 
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-## Desarrollo
+## Development
 
 ```bash
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000). La home muestra el hero; la barra superior incluye navegación y **Connect Wallet** (Wagmi). El dashboard en `/dashboard` envía el formulario al endpoint de descubrimiento de cohortes.
+Open [http://localhost:3000](http://localhost:3000). The home page shows the hero; the top bar has navigation and **Connect Wallet** (Wagmi). The `/dashboard` route submits the form to the cohort discovery endpoint.
 
-## Estructura principal
+## Layout
 
-- `app/` — rutas App Router, `layout.tsx`, `providers.tsx` (Wagmi + React Query), límites de error
-- `components/ui/` — átomos (p. ej. `WalletButton`)
-- `components/cohort/` — UI de dominio (`CohortTable`)
-- `components/layout/` — cabecera compartida (`AppHeader`)
-- `hooks/` — `useWallet`, `useCohortApi` (mutación React Query + Axios)
-- `lib/` — configuración Wagmi y URL del API
-- `types/` — DTOs alineados con el backend
-- `styles/globals.css` — entrada Tailwind
+- `app/` — App Router routes, `layout.tsx`, `providers.tsx` (Wagmi + React Query), error boundaries
+- `components/ui/` — atoms (e.g. `WalletButton`)
+- `components/cohort/` — domain UI (`CohortTable`, marketplace)
+- `components/layout/` — shared header (`AppHeader`)
+- `hooks/` — `useWallet`, `useCohortApi` (React Query mutation + Axios)
+- `lib/` — Wagmi config and API URL
+- `types/` — DTOs aligned with the backend
+- `styles/globals.css` — Tailwind entry
 
 ## Scripts
 
-- `npm run dev` — servidor de desarrollo
-- `npm run build` — compilación de producción (`output: "standalone"` para Docker)
-- `npm run start` — sirve la build (`next start`)
-- `npm run lint` — ESLint (requiere configuración local si `next lint` pide inicialización)
+- `npm run dev` — development server
+- `npm run build` — production build (`output: "standalone"` for Docker)
+- `npm run start` — serve the build (`next start`)
+- `npm run lint` — ESLint (may need local setup if `next lint` asks to initialize)
 
 ## Docker
 
-Desde la raíz del monorepo:
+From the monorepo root:
 
 ```bash
 docker compose up --build frontend
 ```
 
-La imagen usa la salida `standalone` de Next.js y escucha en el puerto **3000**. Pasa `NEXT_PUBLIC_API_URL` si el backend no es accesible en `http://localhost:8000` desde el navegador (por ejemplo URL pública o nombre de servicio en la red Docker).
+The image uses Next.js `standalone` output and listens on port **3000**. Set `NEXT_PUBLIC_API_URL` if the backend is not reachable at `http://localhost:8000` from the browser (e.g. public URL or Docker service name).
 
-## Convenciones del proyecto
+## Project conventions
 
-Las reglas de Cursor en la raíz del repositorio (`.cursorrules`) describen el stack, diseño atómico de componentes y convenciones de carpetas bajo `packages/frontend`.
+Cursor rules at the repo root (`.cursorrules`) describe the stack, atomic component design, and folder conventions under `packages/frontend`.

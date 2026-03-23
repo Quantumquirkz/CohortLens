@@ -21,8 +21,7 @@ export function MarketplaceTable({ models }: Props) {
   if (models.length === 0) {
     return (
       <p className="rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-8 text-center text-slate-400">
-        No hay modelos registrados. Sube uno con la API o sincroniza desde la
-        cadena.
+        No registered models. Upload one via the API or sync from chain.
       </p>
     );
   }
@@ -32,11 +31,11 @@ export function MarketplaceTable({ models }: Props) {
       <table className="w-full text-left text-sm">
         <thead className="border-b border-slate-800 bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
           <tr>
-            <th className="px-4 py-3 font-medium">Nombre</th>
-            <th className="px-4 py-3 font-medium">Propietario</th>
-            <th className="px-4 py-3 font-medium">Formato</th>
-            <th className="px-4 py-3 font-medium">Precio (ETH)</th>
-            <th className="px-4 py-3 font-medium text-right">Acción</th>
+            <th className="px-4 py-3 font-medium">Name</th>
+            <th className="px-4 py-3 font-medium">Owner</th>
+            <th className="px-4 py-3 font-medium">Format</th>
+            <th className="px-4 py-3 font-medium">Price (ETH)</th>
+            <th className="px-4 py-3 font-medium text-right">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800">
@@ -55,7 +54,7 @@ export function MarketplaceTable({ models }: Props) {
                   href={`/models/${m.id}`}
                   className="inline-flex rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-indigo-500"
                 >
-                  Usar modelo
+                  Use model
                 </Link>
               </td>
             </tr>

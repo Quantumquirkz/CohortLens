@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     template: "%s · CohortLens",
   },
   description:
-    "Descubre cohortes de usuarios on-chain con clustering y análisis.",
+    "Discover on-chain user cohorts with clustering and analysis.",
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="en">
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
         <Providers>
           <AppHeader />

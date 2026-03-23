@@ -30,7 +30,7 @@ async function fetchPredictionStatus(taskId: string): Promise<PredictTaskStatus>
 }
 
 /**
- * Lista modelos registrados (`GET /api/v1/models`).
+ * Lists registered models (`GET /api/v1/models`).
  */
 export function useModelsList(syncChain = false) {
   return useQuery({
@@ -43,7 +43,7 @@ type PredictArgs = {
   modelId: number;
   features: number[];
   asyncMode?: boolean;
-  /** Si hay cartera conectada, firma el mensaje estándar (útil cuando el backend exige auth). */
+  /** If a wallet is connected, sign the standard message (when the backend requires auth). */
   useWalletSignature?: boolean;
 };
 
@@ -65,7 +65,7 @@ async function buildWalletAuthHeaders(
 }
 
 /**
- * Predicción sync o async; opcionalmente añade cabeceras de firma EIP-191.
+ * Sync or async prediction; optionally adds EIP-191 signature headers.
  */
 export function useModelPredict() {
   const { address, isConnected } = useWallet();
@@ -93,7 +93,7 @@ export function useModelPredict() {
           const auth = await buildWalletAuthHeaders(address, signMessageAsync);
           Object.assign(headers, auth);
         } catch {
-          /* sin firma: el backend puede seguir aceptando la petición */
+          /* no signature: backend may still accept the request */
         }
       }
 

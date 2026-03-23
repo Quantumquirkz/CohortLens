@@ -19,14 +19,15 @@ function parseApiError(err: unknown): string {
         .join("; ");
     }
     if (d != null) return JSON.stringify(d);
-    return err.message || "Error de red";
+    return err.message || "Network error";
   }
   if (err instanceof Error) return err.message;
-  return "Error desconocido";
+  return "Unknown error";
 }
 
 export default function DashboardPage() {
   const [protocol, setProtocol] = useState("");
+  const [chain, setChain] = useState("polygon");
   const [startBlock, setStartBlock] = useState("");
   const [endBlock, setEndBlock] = useState("");
   const [numClusters, setNumClusters] = useState("3");
@@ -46,24 +47,25 @@ export default function DashboardPage() {
     const clusters = Number.parseInt(numClusters, 10);
 
     if (!protocol.trim()) {
-      setClientError("Indica un nombre de protocolo.");
+      setClientError("Enter a protocol name.");
       return;
     }
     if (Number.isNaN(start) || Number.isNaN(end)) {
-      setClientError("Los bloques deben ser enteros válidos.");
+      setClientError("Blocks must be valid integers.");
       return;
     }
     if (start > end) {
-      setClientError("El bloque de inicio no puede ser mayor que el de fin.");
+      setClientError("Start block cannot be greater than end block.");
       return;
     }
     if (Number.isNaN(clusters) || clusters < 1 || clusters > 200) {
-      setClientError("El número de clusters debe estar entre 1 y 200.");
+      setClientError("Number of clusters must be between 1 and 200.");
       return;
     }
 
     const body = {
       protocol: protocol.trim(),
+      chain: chain.trim() || "polygon",
       start_block: start,
       end_block: end,
       num_clusters: clusters,
@@ -84,10 +86,10 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-4xl px-4 py-10">
       <header className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight text-white">
-          Descubrimiento de cohortes
+          Cohort discovery
         </h1>
         <p className="mt-1 text-sm text-slate-400">
-          Envía parámetros al backend y revisa los clusters (POST{" "}
+          Send parameters to the backend and review clusters (POST{" "}
           <code className="rounded bg-slate-800 px-1 py-0.5 text-xs">
             /api/v1/cohorts/discover
           </code>
@@ -100,22 +102,33 @@ export default function DashboardPage() {
         className="mb-10 rounded-xl border border-slate-800 bg-slate-900/50 p-6 shadow-xl"
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 sm:col-span-2">
+          <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-slate-300">
-              Nombre del protocolo
+              Protocol name
             </span>
             <input
               type="text"
               value={protocol}
               onChange={(e) => setProtocol(e.target.value)}
               className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              placeholder="ej. uniswap-v3"
+              placeholder="e.g. aave-v3"
+              autoComplete="off"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-slate-300">Chain</span>
+            <input
+              type="text"
+              value={chain}
+              onChange={(e) => setChain(e.target.value)}
+              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              placeholder="polygon"
               autoComplete="off"
             />
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-slate-300">
-              Bloque inicio
+                Start block
             </span>
             <input
               type="number"
@@ -128,7 +141,7 @@ export default function DashboardPage() {
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-slate-300">
-              Bloque fin
+                End block
             </span>
             <input
               type="number"
@@ -141,7 +154,7 @@ export default function DashboardPage() {
           </label>
           <label className="flex flex-col gap-1 sm:col-span-2">
             <span className="text-sm font-medium text-slate-300">
-              Número de clusters
+              Number of clusters
             </span>
             <input
               type="number"
@@ -167,7 +180,7 @@ export default function DashboardPage() {
             disabled={discover.isPending}
             className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
           >
-            {discover.isPending ? "Enviando…" : "Descubrir cohortes"}
+            {discover.isPending ? "Sending…" : "Discover cohorts"}
           </button>
         </div>
       </form>

@@ -32,9 +32,9 @@ export default function ModelDetailPage() {
   if (Number.isNaN(id) || id < 1) {
     return (
       <section className="mx-auto max-w-3xl px-4 py-12">
-        <p className="text-red-200">Identificador de modelo no válido.</p>
+        <p className="text-red-200">Invalid model identifier.</p>
         <Link href="/marketplace" className="mt-4 inline-block text-indigo-400">
-          Volver al marketplace
+          Back to marketplace
         </Link>
       </section>
     );
@@ -50,11 +50,11 @@ export default function ModelDetailPage() {
       </Link>
 
       {isLoading && (
-        <p className="mt-8 text-slate-400">Cargando modelo…</p>
+        <p className="mt-8 text-slate-400">Loading model…</p>
       )}
       {error && (
         <p className="mt-8 text-red-200">
-          No se pudo cargar el listado de modelos.
+          Could not load the model list.
         </p>
       )}
 
@@ -62,7 +62,7 @@ export default function ModelDetailPage() {
         <>
           <header className="mt-6 border-b border-slate-800 pb-6">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-400">
-              Modelo #{model.id}
+              Model #{model.id}
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-white">
               {model.name}
@@ -70,34 +70,34 @@ export default function ModelDetailPage() {
             <p className="mt-3 text-slate-400">{model.description}</p>
             <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-slate-500">Propietario</dt>
+                <dt className="text-slate-500">Owner</dt>
                 <dd className="font-mono text-xs text-slate-200">
                   {model.owner}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">CID / hash modelo</dt>
+                <dt className="text-slate-500">CID / model hash</dt>
                 <dd className="break-all font-mono text-xs text-slate-200">
                   {model.model_hash}
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Formato</dt>
+                <dt className="text-slate-500">Format</dt>
                 <dd className="text-slate-200">{model.model_format}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Tipo</dt>
+                <dt className="text-slate-500">Type</dt>
                 <dd className="text-slate-200">{model.model_type || "—"}</dd>
               </div>
               <div>
-                <dt className="text-slate-500">Precio por consulta</dt>
+                <dt className="text-slate-500">Price per query</dt>
                 <dd className="text-slate-200">
                   {weiToEthLabel(model.price_per_query_wei)} ETH
                 </dd>
               </div>
               <div>
-                <dt className="text-slate-500">Activo</dt>
-                <dd className="text-slate-200">{model.active ? "Sí" : "No"}</dd>
+                <dt className="text-slate-500">Active</dt>
+                <dd className="text-slate-200">{model.active ? "Yes" : "No"}</dd>
               </div>
             </dl>
           </header>
@@ -110,8 +110,8 @@ export default function ModelDetailPage() {
 
       {!isLoading && !error && !model && (
         <p className="mt-8 text-slate-400">
-          No se encontró el modelo {id}. Prueba a sincronizar desde cadena en el
-          marketplace o verifica que exista en la API.
+          Model {id} was not found. Try syncing from chain in the marketplace or
+          confirm it exists in the API.
         </p>
       )}
     </section>

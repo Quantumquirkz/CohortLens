@@ -1,4 +1,4 @@
-/** Listado y detalle de lentes (modelos) en la API. */
+/** List and detail for lenses (models) from the API. */
 export type LensPublic = {
   id: number;
   owner: string;

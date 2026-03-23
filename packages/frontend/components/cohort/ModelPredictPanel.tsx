@@ -86,23 +86,23 @@ export function ModelPredictPanel({ model }: Props) {
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-      <h2 className="text-lg font-semibold text-white">Inferencia</h2>
+      <h2 className="text-lg font-semibold text-white">Inference</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Vector numérico (coma o JSON). Con la cartera conectada se envía firma
-        EIP-191 si el backend lo exige.
+        Numeric vector (comma-separated or JSON). With a connected wallet, an
+        EIP-191 signature is sent if the backend requires it.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <label className="block">
           <span className="text-xs font-medium uppercase text-slate-500">
-            Características
+            Features
           </span>
           <textarea
             value={rawFeatures}
             onChange={(e) => setRawFeatures(e.target.value)}
             rows={4}
             className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            placeholder="0.1, 0.2 o [0.1, 0.2]"
+            placeholder="0.1, 0.2 or [0.1, 0.2]"
           />
         </label>
 
@@ -113,7 +113,7 @@ export function ModelPredictPanel({ model }: Props) {
             onChange={(e) => setAsyncMode(e.target.checked)}
             className="rounded border-slate-600"
           />
-          Cola asíncrona (Celery)
+          Async queue (Celery)
         </label>
 
         <button
@@ -121,13 +121,13 @@ export function ModelPredictPanel({ model }: Props) {
           disabled={!features || predict.isPending}
           className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {predict.isPending ? "Ejecutando…" : "Ejecutar predicción"}
+          {predict.isPending ? "Running…" : "Run prediction"}
         </button>
       </form>
 
       {features === null && rawFeatures.trim() !== "" && (
         <p className="mt-4 text-sm text-amber-200">
-          Formato no válido. Usa números separados por comas o un array JSON.
+          Invalid format. Use comma-separated numbers or a JSON array.
         </p>
       )}
 
@@ -145,7 +145,7 @@ export function ModelPredictPanel({ model }: Props) {
 
       {taskId && poll.isFetching && (
         <p className="mt-4 text-sm text-slate-400">
-          Tarea {taskId}: {poll.data?.state ?? "PENDING"}…
+          Task {taskId}: {poll.data?.state ?? "PENDING"}…
         </p>
       )}
 

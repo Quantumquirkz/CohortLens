@@ -25,7 +25,7 @@ export function WalletButton() {
         if (primary) connect({ connector: primary });
       }}
     >
-      {status === "pending" ? "Conectando…" : "Connect Wallet"}
+      {status === "pending" ? "Connecting…" : "Connect Wallet"}
     </button>
   );
 }

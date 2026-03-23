@@ -9,7 +9,7 @@ export function CohortTable({ cohorts, totalUsers }: CohortTableProps) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-400">
-        Usuarios totales:{" "}
+        Total users:{" "}
         <span className="font-mono text-slate-200">{totalUsers}</span>
       </p>
       <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/40 shadow-inner">

@@ -14,7 +14,7 @@ export function AppHeader() {
         </Link>
         <nav className="flex flex-1 items-center justify-center gap-6 sm:gap-8">
           <Link href="/" className={navLinkClass}>
-            Inicio
+            Home
           </Link>
           <Link href="/marketplace" className={navLinkClass}>
             Marketplace
