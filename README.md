@@ -1,6 +1,11 @@
 # CohortLens
 
+[![CI](https://github.com/Quantumquirkz/CohortLens/actions/workflows/ci.yml/badge.svg)](https://github.com/Quantumquirkz/CohortLens/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Tools and services for cohort analysis and on-chain data: smart contracts (Foundry), ML API ([`packages/backend-ai`](packages/backend-ai/README.md)), Next.js web interface ([`packages/frontend`](packages/frontend/README.md)), and The Graph indexers ([`packages/indexers`](packages/indexers/README.md)).
+
+**Documentation site (Docusaurus):** build and run locally with `cd docs && npm install && npm start`, or see [docs/docs/intro.md](docs/docs/intro.md) in the repository.
 
 ## Monorepo architecture
 
@@ -71,6 +76,11 @@ packages/
 - [Frontend](packages/frontend/README.md)
 - [Indexers](packages/indexers/README.md)
 
-## License and contributions
+## License and community
 
-This project is licensed under the MIT license; see [LICENSE](LICENSE). Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md).
+This project is licensed under the MIT license; see [LICENSE](LICENSE).
+
+- [Contributing](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security](SECURITY.md)
+- [Releases](RELEASE.md)
