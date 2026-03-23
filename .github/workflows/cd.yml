@@ -1,0 +1,91 @@
+name: CD
+
+on:
+  release:
+    types: [published, prereleased]
+  workflow_dispatch:
+    inputs:
+      network:
+        description: "Target network (for local docs / future wiring)"
+        required: true
+        default: sepolia
+        type: choice
+        options:
+          - sepolia
+          - mainnet
+          - polygon
+
+permissions:
+  contents: read
+
+jobs:
+  rc-sepolia-hint:
+    if: github.event_name == 'release' && github.event.release.prerelease == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release candidate (testnet)
+        run: |
+          echo "Pre-release published. Deploy to Sepolia from a secured machine:"
+          echo "  cd packages/contracts && forge script script/DeployTokenomics.s.sol --rpc-url \$SEPOLIA_RPC_URL --broadcast"
+          echo "Configure GitHub Environment secrets (SEPOLIA_RPC_URL, DEPLOYER_PRIVATE_KEY, GOVERNANCE_MULTISIG) before enabling automated deploys."
+
+  deploy-contracts:
+    name: Contracts deploy (placeholder)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Hint
+        run: |
+          echo "Mainnet deploys should use a controlled machine, multisig, and secrets in GitHub Environments."
+          echo "Uncomment forge script here after configuring DEPLOYER_PRIVATE_KEY, *_RPC_URL, GOVERNANCE_MULTISIG in the environment."
+          echo "See packages/contracts/deployments/mainnet-multisig.md"
+
+  vercel-frontend:
+    if: github.event_name == 'release' && !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel
+        working-directory: packages/frontend
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "VERCEL_TOKEN not set — skipping Vercel deploy."
+            exit 0
+          fi
+          vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+
+  ipfs-pin:
+    if: github.event_name == 'release' && !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Optional IPFS / Pinata
+        env:
+          PINATA_JWT: ${{ secrets.PINATA_JWT }}
+        run: |
+          if [ -z "${PINATA_JWT:-}" ]; then
+            echo "PINATA_JWT not set — skipping IPFS pin."
+            exit 0
+          fi
+          echo "Add ipfs deploy / pin steps (e.g. pinata, web3.storage) for static export if needed."
