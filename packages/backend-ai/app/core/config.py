@@ -76,6 +76,14 @@ class Settings(BaseSettings):
 
     PROMETHEUS_ENABLED: bool = True
 
+    SENTRY_DSN: str = ""
+    SENTRY_ENVIRONMENT: str = Field(default="development")
+    CORS_ORIGINS: str = Field(
+        default="http://localhost:3000",
+        description="Comma-separated browser origins for CORS",
+    )
+    LOG_LEVEL: str = Field(default="INFO", description="Python logging level (e.g. INFO, DEBUG)")
+
     REQUIRE_LENS_PAYMENT_FOR_DISCOVER: bool = Field(
         default=False,
         description="If true, POST /cohorts/discover requires payment_tx_hash (user-paid requestPrediction)",
@@ -98,6 +106,10 @@ class Settings(BaseSettings):
         default=False,
         description="If true, akash_client may invoke the Akash CLI (advanced operators)",
     )
+
+    def cors_origins_list(self) -> list[str]:
+        """Origins allowed by CORS middleware."""
+        return [p.strip() for p in self.CORS_ORIGINS.split(",") if p.strip()]
 
     def get_chains(self) -> dict[str, ChainConfig]:
         """Logical chain id -> config; backward compatible with a single SUBGRAPH_URL."""
