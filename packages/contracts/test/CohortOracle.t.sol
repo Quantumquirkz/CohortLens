@@ -92,4 +92,22 @@ contract CohortOracleTest is Test {
         vm.expectRevert();
         oracle.fulfillRequest(1, hex"726573756c74"); // "result"
     }
+
+    function test_RegisterPredictionProofHash() public {
+        vm.prank(alice);
+        oracle.requestPrediction(1, hex"ab");
+
+        bytes32 h = keccak256("zk-proof");
+        oracle.registerPredictionProofHash(1, h);
+        assertEq(oracle.predictionProofHashes(1), h);
+    }
+
+    function test_RegisterPredictionProofHash_RevertsWhenNotOwner() public {
+        vm.prank(alice);
+        oracle.requestPrediction(1, hex"ab");
+
+        vm.prank(alice);
+        vm.expectRevert();
+        oracle.registerPredictionProofHash(1, bytes32(uint256(1)));
+    }
 }

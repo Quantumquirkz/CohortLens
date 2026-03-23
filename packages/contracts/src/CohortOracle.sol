@@ -28,8 +28,12 @@ contract CohortOracle is Ownable {
         bytes input
     );
     event PredictionFulfilled(uint256 indexed requestId, bytes result);
+    event PredictionProofHashRegistered(uint256 indexed requestId, bytes32 proofHash);
 
     error RequestNotFulfilled(uint256 requestId);
+
+    /// @notice ZK proof hash (off-chain audit); does not verify the proof on-chain.
+    mapping(uint256 => bytes32) public predictionProofHashes;
 
     constructor() Ownable(msg.sender) {}
 
@@ -71,6 +75,17 @@ contract CohortOracle is Ownable {
         requests[requestId].fulfilled = true;
         requests[requestId].result = result;
         emit PredictionFulfilled(requestId, result);
+    }
+
+    /**
+     * @notice Register the hash of a ZK proof for a request (off-chain verification with EZKL or another tool).
+     */
+    function registerPredictionProofHash(
+        uint256 requestId,
+        bytes32 proofHash
+    ) external onlyOwner {
+        predictionProofHashes[requestId] = proofHash;
+        emit PredictionProofHashRegistered(requestId, proofHash);
     }
 
     /**

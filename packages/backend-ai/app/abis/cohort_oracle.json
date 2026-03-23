@@ -11,6 +11,15 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "requestId", "type": "uint256" },
+      { "indexed": false, "internalType": "bytes32", "name": "proofHash", "type": "bytes32" }
+    ],
+    "name": "PredictionProofHashRegistered",
+    "type": "event"
+  },
+  {
     "inputs": [
       { "internalType": "uint256", "name": "lensId", "type": "uint256" },
       { "internalType": "bytes", "name": "input", "type": "bytes" }
@@ -28,6 +37,23 @@
     "name": "fulfillRequest",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "requestId", "type": "uint256" },
+      { "internalType": "bytes32", "name": "proofHash", "type": "bytes32" }
+    ],
+    "name": "registerPredictionProofHash",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "predictionProofHashes",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "stateMutability": "view",
     "type": "function"
   },
   {
