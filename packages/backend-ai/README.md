@@ -31,13 +31,15 @@ Copy `.env.example` to `.env` and adjust. Summary:
 | `MODEL_CACHE_DIR` | Directory for cached artifacts downloaded by CID. |
 | `MAX_UPLOAD_BYTES` | Maximum multipart upload size for models. |
 | `REQUIRE_WALLET_AUTH` | If `true`, `POST /api/v1/models/{id}/predict` requires `X-Wallet-Address`, `X-Wallet-Signature`, `X-Wallet-Nonce` (nonce from `GET /api/v1/auth/nonce`). |
-| `CHAINS_JSON` | JSON map of logical chains → `{ subgraph_url, rpc_url, cohort_oracle_address, cohort_registry_address }`. If empty, `SUBGRAPH_URL` and global RPC are used as chain `polygon`. |
+| `CHAINS_JSON` | JSON map of logical chains → `{ subgraph_url, rpc_url, cohort_oracle_address, cohort_registry_address, lens_token_address, staking_address }`. If empty, `SUBGRAPH_URL` and global RPC are used as chain `polygon`. |
+| `REQUIRE_LENS_PAYMENT_FOR_DISCOVER` | If `true`, `POST /cohorts/discover` requires `payment_tx_hash` (user `requestPrediction` on-chain); `ORACLE_REQUESTER_PRIVATE_KEY` is not used. |
+| `REQUIRE_STAKE_FOR_UPLOAD` | If `true`, `POST /api/v1/models/upload` requires `X-Wallet-Address` matching `REGISTRY_UPLOADER_PRIVATE_KEY` and sufficient on-chain stake (`staking_address` in `CHAINS_JSON`). |
 | `ORACLE_SCAN_CHAIN` | Chain the Celery worker scans for `fulfill` (default `polygon`). |
 | `COHORT_CACHE_TTL_SECONDS` | Redis TTL for clustering results (when oracle is not used). |
 | `ENABLE_ZK_PROOF_FOR_ONNX` | If `true`, async ONNX predictions with `with_zk` generate a ZK bundle + IPFS. |
 | `PROMETHEUS_ENABLED` | Exposes `/metrics` (HTTP histograms). |
 
-If `COHORT_ORACLE_ADDRESS` or `ORACLE_REQUESTER_PRIVATE_KEY` is missing, `/discover` does **not** call the contract and returns cohorts only (`oracle_request_id` null).
+If the oracle is not configured for the chain, `/discover` returns cohorts only (`oracle_request_id` null). When `REQUIRE_LENS_PAYMENT_FOR_DISCOVER=true`, the client must send a `payment_tx_hash` of a user `requestPrediction` transaction; otherwise the backend uses `ORACLE_REQUESTER_PRIVATE_KEY` as before.
 
 ### Model marketplace (phase 5)
 
@@ -71,7 +73,7 @@ The `scan_and_fulfill_oracle` task runs every 30s, reads `PredictionRequested` e
 
 1. GraphQL: aggregate per user `tx_count`, `volume`, `avg_gas` over the block range (`protocol` must match Aave v3, e.g. `aave-v3`).
 2. Run K-Means on the requested `features`.
-3. If oracle is configured: build gzip payload for `input`, call `requestPrediction`, store the full gzip result in Redis for the worker, return `oracle_request_id` and `oracle_tx_hash`.
+3. If oracle is configured: build gzip payload for `input`, store the full gzip result in Redis for the worker, return `oracle_request_id` and `oracle_tx_hash`. Either the backend signs `requestPrediction` (legacy) or the client pre-paid on-chain and sends `payment_tx_hash` for verification.
 
 ## Docker
 

@@ -1,4 +1,4 @@
-"""Helpers IPFS para scripts (ajusta PYTHONPATH al directorio del paquete)."""
+"""IPFS helpers for scripts (adjust PYTHONPATH to the package directory)."""
 
 from __future__ import annotations
 

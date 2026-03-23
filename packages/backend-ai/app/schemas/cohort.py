@@ -40,6 +40,14 @@ class CohortRequest(BaseModel):
         default_factory=_default_features,
         description="Feature names for clustering",
     )
+    payment_tx_hash: str | None = Field(
+        default=None,
+        description="Tx hash of user-paid requestPrediction (required when REQUIRE_LENS_PAYMENT_FOR_DISCOVER)",
+    )
+    payment_requester: str | None = Field(
+        default=None,
+        description="Optional checksummed address of the payer (must match on-chain requester)",
+    )
 
     @field_validator("features")
     @classmethod

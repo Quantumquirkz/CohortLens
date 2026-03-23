@@ -188,9 +188,9 @@ def register_prediction_proof_hash(
 
 
 def is_oracle_ready(settings: Any) -> bool:
-    """True if RPC, contract, and key are set to sign ``requestPrediction``."""
-    return bool(
-        settings.SEPOLIA_RPC_URL
-        and settings.COHORT_ORACLE_ADDRESS
-        and settings.ORACLE_REQUESTER_PRIVATE_KEY,
-    )
+    """True if RPC, contract, and either requester key or user-paid discover mode."""
+    if not (settings.SEPOLIA_RPC_URL and settings.COHORT_ORACLE_ADDRESS):
+        return False
+    if getattr(settings, "REQUIRE_LENS_PAYMENT_FOR_DISCOVER", False):
+        return True
+    return bool(settings.ORACLE_REQUESTER_PRIVATE_KEY)

@@ -15,6 +15,8 @@ class ChainConfig(BaseModel):
     rpc_url: str
     cohort_oracle_address: str = ""
     cohort_registry_address: str = ""
+    lens_token_address: str = ""
+    staking_address: str = ""
 
 
 class Settings(BaseSettings):
@@ -33,7 +35,7 @@ class Settings(BaseSettings):
     )
     CHAINS_JSON: str = Field(
         default="",
-        description='JSON: {"polygon":{"subgraph_url":"...","rpc_url":"...","cohort_oracle_address":"","cohort_registry_address":""}}',
+        description='JSON per chain: subgraph_url, rpc_url, cohort_oracle_address, cohort_registry_address, lens_token_address, staking_address',
     )
     DEFAULT_CHAIN: str = "polygon"
     ORACLE_SCAN_CHAIN: str = Field(
@@ -73,6 +75,15 @@ class Settings(BaseSettings):
     )
 
     PROMETHEUS_ENABLED: bool = True
+
+    REQUIRE_LENS_PAYMENT_FOR_DISCOVER: bool = Field(
+        default=False,
+        description="If true, POST /cohorts/discover requires payment_tx_hash (user-paid requestPrediction)",
+    )
+    REQUIRE_STAKE_FOR_UPLOAD: bool = Field(
+        default=False,
+        description="If true, model upload requires X-Wallet-Address and sufficient on-chain stake",
+    )
 
     ENABLE_ZK_PROOF_FOR_ONNX: bool = Field(
         default=False,

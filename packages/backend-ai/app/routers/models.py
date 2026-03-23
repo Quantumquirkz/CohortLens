@@ -1,7 +1,8 @@
 """Models API (marketplace)."""
 
 from celery.result import AsyncResult
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from eth_account import Account
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Query, Request, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from web3 import Web3
@@ -26,7 +27,9 @@ from app.schemas.models_api import (
 )
 from app.services.blockchain_client import get_web3
 from app.services.ipfs_client import IpfsError, add_bytes
+from app.services.chain_manager import ChainManagerError, get_chain_config
 from app.services.registry_contract import get_lens, get_registry_contract, lens_count, register_lens
+from app.services.token_client import balance_of_staked, min_stake_to_register
 from app.services.async_prediction import enqueue_predict
 from app.tasks.celery_app import celery_app
 
@@ -35,6 +38,39 @@ router = APIRouter()
 
 def _registry_ready() -> bool:
     return bool(settings.COHORT_REGISTRY_ADDRESS and settings.REGISTRY_UPLOADER_PRIVATE_KEY)
+
+
+def _verify_creator_stake(x_wallet_address: str | None) -> None:
+    if not settings.REQUIRE_STAKE_FOR_UPLOAD:
+        return
+    if not x_wallet_address:
+        raise HTTPException(
+            status_code=400,
+            detail="X-Wallet-Address header required when REQUIRE_STAKE_FOR_UPLOAD=true",
+        )
+    try:
+        chain = get_chain_config(settings.ORACLE_SCAN_CHAIN)
+    except ChainManagerError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+    if not chain.staking_address or not chain.cohort_registry_address:
+        raise HTTPException(
+            status_code=503,
+            detail="staking_address and cohort_registry_address must be set in CHAINS_JSON for stake checks",
+        )
+    w3 = get_web3(chain.rpc_url)
+    staked = balance_of_staked(w3, chain.staking_address, x_wallet_address)
+    need = min_stake_to_register(w3, chain.cohort_registry_address)
+    if staked < need:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient LENS stake: need {need}, have {staked}",
+        )
+    uploader = Account.from_key(settings.REGISTRY_UPLOADER_PRIVATE_KEY).address
+    if Web3.to_checksum_address(x_wallet_address) != Web3.to_checksum_address(uploader):
+        raise HTTPException(
+            status_code=400,
+            detail="X-Wallet-Address must match REGISTRY_UPLOADER_PRIVATE_KEY account when using server-side registration",
+        )
 
 
 def _sync_from_chain(db: Session) -> None:
@@ -104,12 +140,14 @@ async def upload_model(
     model_type: str = Form("generic"),
     price_per_query_wei: int = Form(0),
     model_format: str = Form(..., description="pickle or onnx"),
+    x_wallet_address: str | None = Header(default=None, alias="X-Wallet-Address"),
 ) -> LensUploadResponse:
     if not _registry_ready():
         raise HTTPException(
             status_code=503,
             detail="Set COHORT_REGISTRY_ADDRESS and REGISTRY_UPLOADER_PRIVATE_KEY",
         )
+    _verify_creator_stake(x_wallet_address)
     fmt = model_format.lower().strip()
     if fmt not in ("pickle", "onnx"):
         raise HTTPException(status_code=400, detail="model_format must be pickle or onnx")
