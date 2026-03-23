@@ -1,0 +1,103 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cohortlens
+      POSTGRES_PASSWORD: cohortlens
+      POSTGRES_DB: cohortlens
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cohortlens -d cohortlens"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-graph:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: graph-node
+      POSTGRES_PASSWORD: let-me-in
+      POSTGRES_DB: graph-node
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_graph_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U graph-node -d graph-node"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  ipfs:
+    image: ipfs/kubo:v0.24.0
+    ports:
+      - "4001:4001"
+      - "5001:5001"
+      - "8080:8080"
+    volumes:
+      - ipfs_data:/data/ipfs
+
+  graph-node:
+    image: graphprotocol/graph-node:v0.34.1
+    depends_on:
+      postgres-graph:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    ports:
+      - "8020:8000"
+      - "8030:8030"
+      - "8040:8040"
+    environment:
+      postgres_host: postgres-graph
+      postgres_user: graph-node
+      postgres_pass: let-me-in
+      postgres_db: graph-node
+      ipfs: "ipfs:5001"
+      # Point to your Polygon RPC; placeholder for local subgraph development.
+      ethereum: "polygon:${POLYGON_RPC_URL:-https://polygon-rpc.com/}"
+
+  backend-ai:
+    build:
+      context: ./packages/backend-ai
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://cohortlens:cohortlens@postgres:5432/cohortlens
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
+
+volumes:
+  postgres_data:
+  postgres_graph_data:
+  redis_data:
+  ipfs_data:
