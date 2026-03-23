@@ -38,6 +38,13 @@
 - **Zero-knowledge proofs (EZKL)**: generate proofs that certify model execution without exposing private data; register the **proof hash** on-chain (`CohortOracle`) for auditing; full SNARK verification stays off-chain.
 - **Distributed cache**: Redis for frequent clustering results; **Prometheus** (and optionally Grafana) for latency, errors, and queue visibility.
 
+## Phase 7 — Tokenomics and governance
+
+- **New contracts** must follow **OpenZeppelin** patterns: **ERC20** + **ERC20Votes** (for governance), **Governor** + **TimelockController**; avoid ad-hoc governance. Economic parameters should be governable via Timelock where appropriate.
+- **Staking**: model creators **lock LENS** in `Staking`; **`CohortRegistry.registerLens`** requires a **minimum staked balance** (read from `Staking`, immutable reference or Timelock-only setter).
+- **Per-query payments**: users pay in **LENS** through **`CohortOracle.requestPrediction`** (`transferFrom` after `approve`/`permit`); the oracle splits fees between the **lens owner**, a **rewards pool** (typically `Staking`), and optionally **treasury**.
+- **Governance**: **OpenZeppelin Governor** (not Governor Bravo unless explicitly justified) + **Timelock**; **ERC20Votes** holders (stakers who delegate) vote on **parameter updates** and **slashing** (e.g. proposals that call `Staking.slash` and `CohortRegistry.setLensActive` to disable malicious models).
+
 ---
 
 # CohortLens — Frontend (packages/frontend)
@@ -45,6 +52,7 @@
 ## Stack
 
 - **Next.js 14+** with the **App Router** (`app/`). Do not add new routes under `pages/` unless migrating legacy code.
+- **Exception (Phase 7)**: tokenomics UIs may live under `pages/staking.tsx` and `pages/governance.tsx` for staking and governance screens.
 - **TypeScript** strict mode; no `any` unless justified with a short comment.
 - **Tailwind CSS** for styling; prefer utility classes and small `@layer` additions in `styles/globals.css` over ad-hoc CSS files.
 - **Wagmi v2** + **Viem** for wallets; **TanStack React Query** for server state (mutations/queries).
