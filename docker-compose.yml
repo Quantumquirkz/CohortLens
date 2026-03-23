@@ -94,6 +94,10 @@ services:
       MODEL_CACHE_DIR: /var/cache/cohortlens-models
       MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-52428800}
       REQUIRE_WALLET_AUTH: ${REQUIRE_WALLET_AUTH:-false}
+      CHAINS_JSON: ${CHAINS_JSON:-}
+      ORACLE_SCAN_CHAIN: ${ORACLE_SCAN_CHAIN:-polygon}
+      ENABLE_ZK_PROOF_FOR_ONNX: ${ENABLE_ZK_PROOF_FOR_ONNX:-false}
+      PROMETHEUS_ENABLED: ${PROMETHEUS_ENABLED:-true}
     volumes:
       - model_cache:/var/cache/cohortlens-models
     depends_on:
@@ -110,12 +114,14 @@ services:
     build:
       context: ./packages/backend-ai
       dockerfile: Dockerfile
-    command: celery -A app.worker.celery_app worker --loglevel=info
+    command: celery -A app.tasks.celery_app worker --loglevel=info -Q ml_tasks,prediction_tasks,zk_tasks
     environment:
       DATABASE_URL: postgresql://cohortlens:cohortlens@postgres:5432/cohortlens
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
+      CHAINS_JSON: ${CHAINS_JSON:-}
+      ORACLE_SCAN_CHAIN: ${ORACLE_SCAN_CHAIN:-polygon}
       SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-https://rpc.sepolia.org}
       COHORT_ORACLE_ADDRESS: ${COHORT_ORACLE_ADDRESS:-}
       ORACLE_OWNER_PRIVATE_KEY: ${ORACLE_OWNER_PRIVATE_KEY:-}
@@ -138,7 +144,7 @@ services:
     build:
       context: ./packages/backend-ai
       dockerfile: Dockerfile
-    command: celery -A app.worker.celery_app beat --loglevel=info
+    command: celery -A app.tasks.celery_app beat --loglevel=info
     environment:
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
@@ -161,6 +167,27 @@ services:
     environment:
       NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./packages/backend-ai/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    depends_on:
+      - backend-ai
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    depends_on:
+      - prometheus
 
 volumes:
   postgres_data:
