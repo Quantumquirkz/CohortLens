@@ -1,22 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
-import {Script, console} from "forge-std/Script.sol";
-import {CohortRegistry} from "../src/CohortRegistry.sol";
-import {CohortOracle} from "../src/CohortOracle.sol";
+import {DeployTokenomics} from "./DeployTokenomics.s.sol";
 
-contract DeployContracts is Script {
-    function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-
-        vm.startBroadcast(deployerPrivateKey);
-
-        CohortRegistry registry = new CohortRegistry();
-        CohortOracle oracle = new CohortOracle();
-
-        console.log("CohortRegistry deployed at:", address(registry));
-        console.log("CohortOracle deployed at:", address(oracle));
-
-        vm.stopBroadcast();
-    }
-}
+/// @dev Alias for `DeployTokenomics` — full Phase 7 stack (LENS, timelock, governor, staking, registry, oracle).
+contract DeployContracts is DeployTokenomics {}

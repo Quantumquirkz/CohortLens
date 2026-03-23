@@ -1,25 +1,33 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {CohortRegistry} from "../src/CohortRegistry.sol";
+import {MockStaking} from "./mocks/MockStaking.sol";
 
 contract CohortRegistryTest is Test {
     CohortRegistry public registry;
+    MockStaking public staking;
 
-    address public owner;
-    address public alice;
-    address public bob;
+    address public alice = makeAddr("alice");
+    address public bob = makeAddr("bob");
 
     function setUp() public {
-        owner = address(this);
-        alice = makeAddr("alice");
-        bob = makeAddr("bob");
-        registry = new CohortRegistry();
+        staking = new MockStaking();
+        registry = new CohortRegistry(address(staking), 1 ether);
+    }
+
+    function test_RegisterLens_RevertsWithoutStake() public {
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(CohortRegistry.InsufficientStake.selector, uint256(0), uint256(1 ether))
+        );
+        registry.registerLens("Test Lens", "A test lens", "QmHash123", 1 ether);
     }
 
     function test_RegisterLens() public {
+        staking.setStaked(alice, 2 ether);
         vm.prank(alice);
         uint256 id = registry.registerLens(
             "Test Lens",
@@ -47,6 +55,7 @@ contract CohortRegistryTest is Test {
     }
 
     function test_RegisterLens_EmitsEvent() public {
+        staking.setStaked(alice, 2 ether);
         vm.prank(alice);
         vm.recordLogs();
         registry.registerLens("My Lens", "Desc", "hash", 0);
@@ -56,6 +65,7 @@ contract CohortRegistryTest is Test {
     }
 
     function test_UpdateLens() public {
+        staking.setStaked(alice, 2 ether);
         vm.prank(alice);
         registry.registerLens("Original", "Original desc", "hash", 1 ether);
 
@@ -69,6 +79,7 @@ contract CohortRegistryTest is Test {
     }
 
     function test_SetLensActive() public {
+        staking.setStaked(alice, 2 ether);
         vm.prank(alice);
         registry.registerLens("Lens", "Desc", "hash", 0);
 
@@ -85,6 +96,7 @@ contract CohortRegistryTest is Test {
     }
 
     function test_UpdateLens_RevertsWhenNotOwner() public {
+        staking.setStaked(alice, 2 ether);
         vm.prank(alice);
         registry.registerLens("Alice Lens", "Desc", "hash", 0);
 
@@ -94,6 +106,7 @@ contract CohortRegistryTest is Test {
     }
 
     function test_SetLensActive_RevertsWhenNotOwner() public {
+        staking.setStaked(alice, 2 ether);
         vm.prank(alice);
         registry.registerLens("Alice Lens", "Desc", "hash", 0);
 

@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IStaking} from "./interfaces/IStaking.sol";
 
 /**
  * @title CohortRegistry
  * @author CohortLens
- * @notice Registry for AI model lenses (Lenses). Allows users to register, update, and manage lens metadata.
+ * @notice Registry for AI model lenses; registration requires minimum LENS stake (via Staking).
  */
 contract CohortRegistry is Ownable {
     struct Lens {
@@ -20,37 +21,37 @@ contract CohortRegistry is Ownable {
         uint256 createdAt;
     }
 
+    IStaking public immutable staking;
+    uint256 public minStakeToRegister;
+
     mapping(uint256 => Lens) public lenses;
     uint256 public lensCount;
 
-    event LensRegistered(
-        uint256 indexed id,
-        address indexed owner,
-        string name
-    );
-    event LensUpdated(
-        uint256 indexed id,
-        string name,
-        uint256 pricePerQuery
-    );
+    event LensRegistered(uint256 indexed id, address indexed owner, string name);
+    event LensUpdated(uint256 indexed id, string name, uint256 pricePerQuery);
     event LensStatusChanged(uint256 indexed id, bool active);
+    event MinStakeToRegisterSet(uint256 minStake);
 
     error NotLensOwner();
+    error InsufficientStake(uint256 staked, uint256 required);
 
     modifier onlyLensOwner(uint256 id) {
         if (msg.sender != lenses[id].owner) revert NotLensOwner();
         _;
     }
 
-    constructor() Ownable(msg.sender) {}
+    constructor(address staking_, uint256 minStakeToRegister_) Ownable(msg.sender) {
+        staking = IStaking(staking_);
+        minStakeToRegister = minStakeToRegister_;
+    }
+
+    function setMinStakeToRegister(uint256 minStake) external onlyOwner {
+        minStakeToRegister = minStake;
+        emit MinStakeToRegisterSet(minStake);
+    }
 
     /**
-     * @notice Register a new lens (AI model).
-     * @param name Display name for the lens
-     * @param description Human-readable description
-     * @param modelHash IPFS hash or other identifier for the model
-     * @param pricePerQuery Price in wei per prediction query
-     * @return The ID of the newly registered lens
+     * @param pricePerQuery Price in LENS smallest units (wei) per prediction query.
      */
     function registerLens(
         string calldata name,
@@ -58,6 +59,9 @@ contract CohortRegistry is Ownable {
         string calldata modelHash,
         uint256 pricePerQuery
     ) external returns (uint256) {
+        uint256 st = staking.balanceOfStaked(msg.sender);
+        if (st < minStakeToRegister) revert InsufficientStake(st, minStakeToRegister);
+
         ++lensCount;
         uint256 id = lensCount;
 
@@ -76,13 +80,6 @@ contract CohortRegistry is Ownable {
         return id;
     }
 
-    /**
-     * @notice Update lens metadata. Callable only by the lens owner.
-     * @param id Lens ID
-     * @param name New display name
-     * @param description New description
-     * @param pricePerQuery New price per query in wei
-     */
     function updateLens(
         uint256 id,
         string calldata name,
@@ -95,30 +92,15 @@ contract CohortRegistry is Ownable {
         emit LensUpdated(id, name, pricePerQuery);
     }
 
-    /**
-     * @notice Enable or disable a lens. Callable only by the lens owner.
-     * @param id Lens ID
-     * @param active New active status
-     */
     function setLensActive(uint256 id, bool active) external onlyLensOwner(id) {
         lenses[id].active = active;
         emit LensStatusChanged(id, active);
     }
 
-    /**
-     * @notice Get full lens data by ID.
-     * @param id Lens ID
-     * @return The lens struct
-     */
     function getLens(uint256 id) external view returns (Lens memory) {
         return lenses[id];
     }
 
-    /**
-     * @notice Get all lens IDs owned by an address.
-     * @param owner Address to query
-     * @return Array of lens IDs owned by the address
-     */
     function getLensesByOwner(address owner) external view returns (uint256[] memory) {
         uint256 count = 0;
         for (uint256 i = 1; i <= lensCount; i++) {
