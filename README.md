@@ -73,9 +73,9 @@ The backend runs Alembic migrations on startup against PostgreSQL. See [docs/doc
 | -------------- | ----------- |
 | Frontend       | 3000        |
 | Backend AI     | 8000        |
-| Postgres (app) | 5432        |
+| Postgres (app) | **5434** by default on the host (avoids clashes with local Postgres on 5432); set `POSTGRES_HOST_PORT` to change |
 | Postgres Graph | 5433        |
-| Redis          | 6379        |
+| Redis          | **6380** by default on the host (avoids clashes with local Redis on 6379); set `REDIS_HOST_PORT` to change |
 | Graph Node HTTP| 8020        |
 | IPFS API       | 5001        |
 | PostgREST (`labs` profile) | 3003 |

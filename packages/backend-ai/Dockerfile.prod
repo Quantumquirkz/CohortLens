@@ -8,9 +8,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN useradd --create-home --uid 10001 appuser
 
 FROM base AS deps
+ENV PIP_DEFAULT_TIMEOUT=300
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir --retries 10 -r requirements.txt
 
 FROM base AS runtime
 COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages

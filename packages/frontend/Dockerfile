@@ -2,7 +2,11 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm install
+# Harden against flaky networks (ECONNRESET) during image builds.
+ENV npm_config_fetch_retries=5 \
+    npm_config_fetch_retry_mintimeout=20000 \
+    npm_config_fetch_retry_maxtimeout=120000
+RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
