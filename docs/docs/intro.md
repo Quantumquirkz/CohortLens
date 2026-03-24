@@ -11,4 +11,4 @@ sidebar_position: 1
 - **Frontend** (`packages/frontend`) — Next.js, Wagmi, React Query.
 - **Indexers** (`packages/indexers`) — The Graph subgraphs per protocol and chain.
 
-Use the sidebar for architecture, deployment, API reference, and security practices.
+Use the sidebar for architecture, deployment, API reference, security practices, and the strategic blueprint.

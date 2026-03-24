@@ -10,6 +10,8 @@ const sidebars: SidebarsConfig = {
     'contributing',
     'examples',
     'security',
+    'strategy',
+    'integration-labs',
   ],
 };
 
