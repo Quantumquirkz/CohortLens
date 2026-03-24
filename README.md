@@ -29,6 +29,16 @@ packages/
 - **Docker** and Docker Compose (integrated environment)
 - **Foundry** (`forge`, `cast`) for [`packages/contracts`](packages/contracts/README.md)
 
+## ML Lab stack (PostgREST, Hugging Face, Gradio)
+
+Optional services use the Compose profile `labs` (PostgREST on host port **3003**, Gradio on **7860**). Example:
+
+```bash
+docker compose --profile labs up --build
+```
+
+The backend runs Alembic migrations on startup against PostgreSQL. See [docs/docs/integration-labs.md](docs/docs/integration-labs.md) (Docusaurus: *PostgREST, Hugging Face, and Gradio*).
+
 ## Quick start with Docker
 
 1. Copy example variables and adjust as needed:
@@ -68,6 +78,8 @@ packages/
 | Redis          | 6379        |
 | Graph Node HTTP| 8020        |
 | IPFS API       | 5001        |
+| PostgREST (`labs` profile) | 3003 |
+| Gradio Lab (`labs` profile) | 7860 |
 
 ## Package documentation
 

@@ -78,6 +78,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
     environment:
       DATABASE_URL: postgresql://cohortlens:cohortlens@postgres:5432/cohortlens
       REDIS_URL: redis://redis:6379/0
@@ -100,6 +110,10 @@ services:
       REQUIRE_STAKE_FOR_UPLOAD: ${REQUIRE_STAKE_FOR_UPLOAD:-false}
       ENABLE_ZK_PROOF_FOR_ONNX: ${ENABLE_ZK_PROOF_FOR_ONNX:-false}
       PROMETHEUS_ENABLED: ${PROMETHEUS_ENABLED:-true}
+      HF_TOKEN: ${HF_TOKEN:-}
+      HF_ALLOWED_REPOS: ${HF_ALLOWED_REPOS:-*}
+      POSTGREST_JWT_SECRET: ${POSTGREST_JWT_SECRET:-}
+      GRADIO_INTERNAL_API_KEY: ${GRADIO_INTERNAL_API_KEY:-}
     volumes:
       - model_cache:/var/cache/cohortlens-models
     depends_on:
@@ -169,10 +183,42 @@ services:
     environment:
       NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_GRADIO_URL: ${NEXT_PUBLIC_GRADIO_URL:-http://localhost:7860}
       NEXT_PUBLIC_LENS_TOKEN_ADDRESS: ${NEXT_PUBLIC_LENS_TOKEN_ADDRESS:-}
       NEXT_PUBLIC_STAKING_ADDRESS: ${NEXT_PUBLIC_STAKING_ADDRESS:-}
       NEXT_PUBLIC_COHORT_ORACLE_ADDRESS: ${NEXT_PUBLIC_COHORT_ORACLE_ADDRESS:-}
       NEXT_PUBLIC_COHORT_GOVERNOR_ADDRESS: ${NEXT_PUBLIC_COHORT_GOVERNOR_ADDRESS:-}
+
+  postgrest:
+    profiles: ["labs"]
+    image: postgrest/postgrest:v12.2.3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend-ai:
+        condition: service_healthy
+    ports:
+      - "3003:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgrest_authenticator:postgrest_dev_change_me@postgres:5432/cohortlens
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: postgrest_anon
+      PGRST_SERVER_PORT: 3000
+      PGRST_JWT_SECRET: ${POSTGREST_JWT_SECRET:-}
+
+  gradio-lab:
+    profiles: ["labs"]
+    build:
+      context: ./packages/gradio-lab
+      dockerfile: Dockerfile
+    ports:
+      - "7860:7860"
+    environment:
+      BACKEND_API_URL: http://backend-ai:8000
+      GRADIO_INTERNAL_API_KEY: ${GRADIO_INTERNAL_API_KEY:-}
+    depends_on:
+      backend-ai:
+        condition: service_healthy
 
   prometheus:
     image: prom/prometheus:v2.54.1
