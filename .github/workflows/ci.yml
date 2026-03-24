@@ -170,3 +170,6 @@ jobs:
 
       - name: Build frontend image
         run: docker build -f packages/frontend/Dockerfile.prod -t cohortlens-frontend:ci packages/frontend
+
+      - name: Build gradio-lab image
+        run: docker build -f packages/gradio-lab/Dockerfile -t cohortlens-gradio-lab:ci packages/gradio-lab
