@@ -5,6 +5,7 @@ export type LensPublic = {
   name: string;
   description: string;
   model_hash: string;
+  hf_repo_id?: string | null;
   price_per_query_wei: number;
   model_format: string;
   model_type: string;

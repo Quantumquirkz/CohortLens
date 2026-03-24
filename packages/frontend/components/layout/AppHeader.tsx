@@ -19,6 +19,9 @@ export function AppHeader() {
           <Link href="/marketplace" className={navLinkClass}>
             Marketplace
           </Link>
+          <Link href="/lab" className={navLinkClass}>
+            Lab
+          </Link>
           <Link href="/dashboard" className={navLinkClass}>
             Dashboard
           </Link>
