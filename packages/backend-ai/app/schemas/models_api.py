@@ -11,6 +11,7 @@ class LensPublic(BaseModel):
     name: str
     description: str
     model_hash: str
+    hf_repo_id: str | None = None
     price_per_query_wei: int
     model_format: str
     model_type: str

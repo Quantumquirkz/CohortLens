@@ -38,6 +38,11 @@ Copy `.env.example` to `.env` and adjust. Summary:
 | `COHORT_CACHE_TTL_SECONDS` | Redis TTL for clustering results (when oracle is not used). |
 | `ENABLE_ZK_PROOF_FOR_ONNX` | If `true`, async ONNX predictions with `with_zk` generate a ZK bundle + IPFS. |
 | `PROMETHEUS_ENABLED` | Exposes `/metrics` (HTTP histograms). |
+| `HF_TOKEN` | Optional Hugging Face Hub token (private repos). |
+| `HF_ALLOWED_REPOS` | Comma-separated `org/model` allowlist, or `*` (dev). |
+| `POSTGREST_JWT_SECRET` | HS256 secret for `POST /api/v1/auth/postgrest-token` (must match PostgREST `PGRST_JWT_SECRET`). |
+| `POSTGREST_JWT_EXPIRE_MINUTES` | Lifetime of PostgREST JWTs. |
+| `GRADIO_INTERNAL_API_KEY` | When `REQUIRE_WALLET_AUTH=true`, `X-Internal-Key` on predict satisfies auth (for the Gradio lab container). |
 
 If the oracle is not configured for the chain, `/discover` returns cohorts only (`oracle_request_id` null). When `REQUIRE_LENS_PAYMENT_FOR_DISCOVER=true`, the client must send a `payment_tx_hash` of a user `requestPrediction` transaction; otherwise the backend uses `ORACLE_REQUESTER_PRIVATE_KEY` as before.
 
@@ -46,7 +51,9 @@ If the oracle is not configured for the chain, `/discover` returns cohorts only 
 - **Pickle / joblib and ONNX**: the API validates buffers before accept; **pickle only from trusted sources** (arbitrary code execution risk).
 - **Upload flow**: `POST /api/v1/models/upload` (multipart) → IPFS (`add`) → `registerLens` on-chain → Postgres row (`lenses`).
 - **Prediction**: `POST /api/v1/models/{id}/predict` (sync) or `?async_mode=true` + Celery; status at `GET /api/v1/models/predictions/{task_id}`.
-- **Migrations**: `alembic upgrade head` (table `lenses`). In dev, schema is also created via `create_all` on startup.
+- **Migrations**: `alembic upgrade head` (table `lenses` + optional `hf_repo_id` and PostgREST RLS on PostgreSQL). Docker images run `alembic upgrade head` on startup when `DATABASE_URL` starts with `postgresql`.
+- **Hugging Face Hub**: `PATCH /api/v1/hf/models/{id}/link` with `{"hf_repo_id":"org/model"}`; `POST /api/v1/hf/models/{id}/sync` downloads a snapshot under `MODEL_CACHE_DIR/hf_snapshots/` (allowlist enforced).
+- **PostgREST token**: `POST /api/v1/auth/postgrest-token` with wallet headers when `POSTGREST_JWT_SECRET` is set.
 - **Example script**: `python scripts/train_churn_model.py` builds a pickle and can upload if you set `COHORTLENS_UPLOAD_URL` or `--upload-url`.
 
 ## Local development

@@ -22,3 +22,5 @@ joblib==1.4.2
 prometheus-client==0.21.0
 prometheus-fastapi-instrumentator==6.1.0
 sentry-sdk[fastapi]==2.19.0
+huggingface_hub==0.28.1
+PyJWT==2.12.0

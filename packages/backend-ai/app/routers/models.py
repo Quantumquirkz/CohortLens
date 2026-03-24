@@ -20,7 +20,7 @@ from web3 import Web3
 from app.core.config import settings
 from app.db.models import LensRecord
 from app.db.session import get_db
-from app.deps.auth_wallet import optional_wallet_auth
+from app.deps.auth_wallet import resolve_predict_auth
 from app.limiter import limiter
 from app.models.registry import (
     ModelRegistry,
@@ -135,6 +135,7 @@ async def list_models(
             name=r.name,
             description=r.description,
             model_hash=r.cid,
+            hf_repo_id=r.hf_repo_id,
             price_per_query_wei=r.price_per_query_wei,
             model_format=r.model_format,
             model_type=r.model_type,
@@ -237,7 +238,7 @@ async def predict(
     model_id: int,
     body: PredictRequest,
     db: Session = Depends(get_db),
-    _: str | None = Depends(optional_wallet_auth),
+    _: str | None = Depends(resolve_predict_auth),
     async_mode: bool = Query(False),
 ) -> PredictResponse:
     reg = ModelRegistry(db)

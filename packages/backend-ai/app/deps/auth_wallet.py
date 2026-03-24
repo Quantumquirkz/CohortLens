@@ -55,3 +55,18 @@ async def optional_wallet_auth(
     if not settings.REQUIRE_WALLET_AUTH:
         return None
     return verify_wallet_signature(x_wallet_address, x_wallet_signature, x_wallet_nonce)
+
+
+async def resolve_predict_auth(
+    _request: Request,
+    x_internal_key: Annotated[str | None, Header(alias="X-Internal-Key")] = None,
+    x_wallet_address: Annotated[str | None, Header(alias="X-Wallet-Address")] = None,
+    x_wallet_signature: Annotated[str | None, Header(alias="X-Wallet-Signature")] = None,
+    x_wallet_nonce: Annotated[str | None, Header(alias="X-Wallet-Nonce")] = None,
+) -> str | None:
+    """When REQUIRE_WALLET_AUTH is true, allow either valid wallet headers or matching X-Internal-Key."""
+    if settings.GRADIO_INTERNAL_API_KEY and x_internal_key == settings.GRADIO_INTERNAL_API_KEY:
+        return "internal"
+    if not settings.REQUIRE_WALLET_AUTH:
+        return None
+    return verify_wallet_signature(x_wallet_address, x_wallet_signature, x_wallet_nonce)

@@ -18,10 +18,13 @@ COPY --from=deps /usr/local/bin /usr/local/bin
 COPY alembic.ini alembic.ini
 COPY alembic alembic
 COPY app app
+COPY docker-entrypoint.sh docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh
 
 USER appuser
 EXPOSE 8000
 
 ENV UVICORN_WORKERS=1
 
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-1}"]

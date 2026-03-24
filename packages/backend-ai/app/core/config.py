@@ -108,6 +108,21 @@ class Settings(BaseSettings):
         description="If true, akash_client may invoke the Akash CLI (advanced operators)",
     )
 
+    HF_TOKEN: str = Field(default="", description="Optional Hugging Face Hub token for private repos")
+    HF_ALLOWED_REPOS: str = Field(
+        default="*",
+        description="Comma-separated allowlist of repo ids (org/name); use * to allow any",
+    )
+    POSTGREST_JWT_SECRET: str = Field(
+        default="",
+        description="HS256 secret for short-lived JWTs consumed by PostgREST (optional)",
+    )
+    POSTGREST_JWT_EXPIRE_MINUTES: int = Field(default=15, ge=1, le=1440)
+    GRADIO_INTERNAL_API_KEY: str = Field(
+        default="",
+        description="If set, prediction requests may use X-Internal-Key with this value when REQUIRE_WALLET_AUTH=true",
+    )
+
     def cors_origins_list(self) -> list[str]:
         """Origins allowed by CORS middleware."""
         return [p.strip() for p in self.CORS_ORIGINS.split(",") if p.strip()]
@@ -134,6 +149,10 @@ class Settings(BaseSettings):
                 cohort_registry_address=self.COHORT_REGISTRY_ADDRESS,
             ),
         }
+
+    def hf_allowed_repos_list(self) -> list[str]:
+        """Normalized allowlist entries; '*' means unrestricted."""
+        return [p.strip() for p in self.HF_ALLOWED_REPOS.split(",") if p.strip()]
 
 
 settings = Settings()

@@ -20,6 +20,7 @@ class LensRecord(Base):
     name: Mapped[str] = mapped_column(String(512))
     description: Mapped[str] = mapped_column(Text(), default="")
     cid: Mapped[str] = mapped_column(String(256))
+    hf_repo_id: Mapped[str | None] = mapped_column(String(256), nullable=True, default=None)
     price_per_query_wei: Mapped[int] = mapped_column(BigInteger(), default=0)
     model_format: Mapped[str] = mapped_column(String(16))
     model_type: Mapped[str] = mapped_column(String(128), default="")
