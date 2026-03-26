@@ -1,0 +1,8 @@
+{
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.12",
+  "venvPath": "./packages/backend-ai",
+  "venv": ".venv",
+  "include": ["packages/backend-ai/app", "packages/backend-ai/tests"],
+  "reportMissingImports": true
+}
