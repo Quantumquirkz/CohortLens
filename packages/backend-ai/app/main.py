@@ -2,11 +2,14 @@
 
 import logging
 from contextlib import asynccontextmanager
+from typing import cast
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.requests import Request
+from starlette.responses import Response
 
 from app.core.config import settings
 from app.db.base import Base
@@ -48,7 +51,20 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="CohortLens AI Backend", version="0.3.0", lifespan=lifespan)
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+def _rate_limit_exceeded_handler_wrapper(request: Request, exc: Exception) -> Response:
+    """
+    Wrapper to satisfy strict typing in Basedpyright/Pyright.
+
+    FastAPI registers the handler for `RateLimitExceeded`, but the handler protocol
+    is typed to accept `Exception`. We delegate to slowapi and cast safely.
+    """
+
+    return _rate_limit_exceeded_handler(request, cast(RateLimitExceeded, exc))
+
+
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler_wrapper)
 
 app.add_middleware(
     CORSMiddleware,
