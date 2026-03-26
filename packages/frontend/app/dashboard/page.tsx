@@ -4,8 +4,13 @@ import axios from "axios";
 import type { FormEvent } from "react";
 import { useState } from "react";
 
+import { toast } from "sonner";
+
 import { CohortTable } from "@/components/cohort/CohortTable";
+import { useGraphqlDashboardSummary } from "@/hooks/useGraphqlReads";
 import { useCohortApi } from "@/hooks/useCohortApi";
+import { primaryButtonClass, primarySoftButtonClass } from "@/lib/button-classes";
+import { USE_GRAPHQL_READS } from "@/lib/graphql-client";
 import type { CohortResponse } from "@/types/cohort";
 
 function parseApiError(err: unknown): string {
@@ -34,6 +39,7 @@ export default function DashboardPage() {
 
   const [clientError, setClientError] = useState<string | null>(null);
   const [result, setResult] = useState<CohortResponse | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const discover = useCohortApi();
 
@@ -47,19 +53,27 @@ export default function DashboardPage() {
     const clusters = Number.parseInt(numClusters, 10);
 
     if (!protocol.trim()) {
-      setClientError("Enter a protocol name.");
+      const msg = "Enter a protocol name.";
+      setClientError(msg);
+      toast.warning(msg);
       return;
     }
     if (Number.isNaN(start) || Number.isNaN(end)) {
-      setClientError("Blocks must be valid integers.");
+      const msg = "Blocks must be valid integers.";
+      setClientError(msg);
+      toast.warning(msg);
       return;
     }
     if (start > end) {
-      setClientError("Start block cannot be greater than end block.");
+      const msg = "Start block cannot be greater than end block.";
+      setClientError(msg);
+      toast.warning(msg);
       return;
     }
     if (Number.isNaN(clusters) || clusters < 1 || clusters > 200) {
-      setClientError("Number of clusters must be between 1 and 200.");
+      const msg = "Number of clusters must be between 1 and 200.";
+      setClientError(msg);
+      toast.warning(msg);
       return;
     }
 
@@ -74,86 +88,122 @@ export default function DashboardPage() {
     try {
       const data = await discover.mutateAsync(body);
       setResult(data);
+      toast.success("Clusters ready", {
+        description: `${data.cohorts.length} cohorts · ${data.total_users} users`,
+      });
     } catch (err) {
-      setClientError(parseApiError(err));
+      const msg = parseApiError(err);
+      setClientError(msg);
+      toast.error(msg);
     }
   }
 
   const apiError =
     discover.isError && !clientError ? parseApiError(discover.error) : null;
+  const startNum = Number.parseInt(startBlock, 10);
+  const endNum = Number.parseInt(endBlock, 10);
+  const summary = useGraphqlDashboardSummary({
+    protocol: protocol.trim(),
+    chain: chain.trim() || "polygon",
+    startBlock: Number.isNaN(startNum) ? -1 : startNum,
+    endBlock: Number.isNaN(endNum) ? -1 : endNum,
+    enabled: USE_GRAPHQL_READS,
+  });
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-white">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Cohort discovery
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-muted-foreground">
           Send parameters to the backend and review clusters (POST{" "}
-          <code className="rounded bg-slate-800 px-1 py-0.5 text-xs">
+          <code className="rounded-md border border-border/10 bg-card px-1.5 py-0.5 font-mono text-xs text-card-foreground">
             /api/v1/cohorts/discover
           </code>
           ).
         </p>
       </header>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mb-10 rounded-xl border border-slate-800 bg-slate-900/50 p-6 shadow-xl"
-      >
+      {USE_GRAPHQL_READS && summary.data && (
+        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-border/10 bg-card/40 p-3">
+            <p className="text-xs text-muted-foreground">Users</p>
+            <p className="text-lg font-semibold text-foreground">{summary.data.totalUsers}</p>
+          </div>
+          <div className="rounded-lg border border-border/10 bg-card/40 p-3">
+            <p className="text-xs text-muted-foreground">Tx count</p>
+            <p className="text-lg font-semibold text-foreground">{summary.data.txCount}</p>
+          </div>
+          <div className="rounded-lg border border-border/10 bg-card/40 p-3">
+            <p className="text-xs text-muted-foreground">Total volume</p>
+            <p className="text-lg font-semibold text-foreground">
+              {summary.data.totalVolume.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/10 bg-card/40 p-3">
+            <p className="text-xs text-muted-foreground">Avg gas</p>
+            <p className="text-lg font-semibold text-foreground">
+              {summary.data.avgGas.toFixed(0)}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="surface-card mb-10">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-300">
+            <span className="text-sm font-medium text-foreground/90">
               Protocol name
             </span>
             <input
               type="text"
               value={protocol}
               onChange={(e) => setProtocol(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="input-field"
               placeholder="e.g. aave-v3"
               autoComplete="off"
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-300">Chain</span>
+            <span className="text-sm font-medium text-foreground/90">Chain</span>
             <input
               type="text"
               value={chain}
               onChange={(e) => setChain(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="input-field"
               placeholder="polygon"
               autoComplete="off"
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-300">
-                Start block
+            <span className="text-sm font-medium text-foreground/90">
+              Start block
             </span>
             <input
               type="number"
               inputMode="numeric"
               value={startBlock}
               onChange={(e) => setStartBlock(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="input-field"
               min={0}
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-slate-300">
-                End block
+            <span className="text-sm font-medium text-foreground/90">
+              End block
             </span>
             <input
               type="number"
               inputMode="numeric"
               value={endBlock}
               onChange={(e) => setEndBlock(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="input-field"
               min={0}
             />
           </label>
           <label className="flex flex-col gap-1 sm:col-span-2">
-            <span className="text-sm font-medium text-slate-300">
+            <span className="text-sm font-medium text-foreground/90">
               Number of clusters
             </span>
             <input
@@ -161,7 +211,7 @@ export default function DashboardPage() {
               inputMode="numeric"
               value={numClusters}
               onChange={(e) => setNumClusters(e.target.value)}
-              className="max-w-xs rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="input-field max-w-xs"
               min={1}
               max={200}
             />
@@ -169,7 +219,7 @@ export default function DashboardPage() {
         </div>
 
         {(clientError || apiError) && (
-          <p className="mt-4 rounded-lg border border-red-900/80 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+          <p className="mt-4 rounded-lg border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm text-destructive-foreground">
             {clientError ?? apiError}
           </p>
         )}
@@ -178,7 +228,7 @@ export default function DashboardPage() {
           <button
             type="submit"
             disabled={discover.isPending}
-            className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            className={primaryButtonClass}
           >
             {discover.isPending ? "Sending…" : "Discover cohorts"}
           </button>
@@ -186,7 +236,37 @@ export default function DashboardPage() {
       </form>
 
       {result && (
-        <CohortTable cohorts={result.cohorts} totalUsers={result.total_users} />
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className={`${primarySoftButtonClass} !px-4 !py-2 !text-xs`}
+              onClick={() => {
+                void navigator.clipboard
+                  .writeText(JSON.stringify(result, null, 2))
+                  .then(() => {
+                    setCopied(true);
+                    toast.success("Copied to clipboard");
+                    window.setTimeout(() => setCopied(false), 2000);
+                  })
+                  .catch(() => toast.error("Could not copy"));
+              }}
+            >
+              {copied ? "Copied" : "Copy JSON"}
+            </button>
+            <button
+              type="button"
+              className={`${primaryButtonClass} !px-4 !py-2 !text-xs`}
+              onClick={() => {
+                setResult(null);
+                toast.info("Results cleared");
+              }}
+            >
+              Clear results
+            </button>
+          </div>
+          <CohortTable cohorts={result.cohorts} totalUsers={result.total_users} />
+        </div>
       )}
     </div>
   );

@@ -4,3 +4,7 @@ export const API_BASE_URL =
 export function cohortDiscoverUrl(): string {
   return `${API_BASE_URL}/api/v1/cohorts/discover`;
 }
+
+export function healthUrl(): string {
+  return `${API_BASE_URL}/health`;
+}

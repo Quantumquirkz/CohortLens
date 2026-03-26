@@ -8,11 +8,13 @@ import "../styles/globals.css";
 export default function PagesApp({ Component, pageProps }: AppProps) {
   return (
     <Providers>
-      <div className="min-h-screen bg-slate-950 text-slate-100 antialiased">
-        <AppHeader />
-        <main>
-          <Component {...pageProps} />
-        </main>
+      <div className="relative min-h-screen bg-background text-foreground antialiased">
+        <div className="relative min-h-screen bg-radial-glow bg-no-repeat">
+          <AppHeader />
+          <main>
+            <Component {...pageProps} />
+          </main>
+        </div>
       </div>
     </Providers>
   );

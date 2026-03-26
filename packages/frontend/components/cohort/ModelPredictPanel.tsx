@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { formatEther } from "viem";
 import {
   useAccount,
@@ -10,6 +11,7 @@ import {
 } from "wagmi";
 
 import { fetchPredictionStatus, useModelPredict } from "@/hooks/useModelsApi";
+import { primaryButtonClass } from "@/lib/button-classes";
 import { cohortOracleAbi, erc20Abi } from "@/lib/tokenomics-abi";
 import {
   COHORT_ORACLE_ADDRESS,
@@ -68,11 +70,22 @@ export function ModelPredictPanel({ model }: Props) {
   const pendingAction = useRef<"approve" | "pay" | null>(null);
 
   useEffect(() => {
-    if (payReceipt.isSuccess && pendingAction.current === "pay") {
+    if (!payReceipt.isSuccess) return;
+    if (pendingAction.current === "pay") {
       setLensPaymentDone(true);
       pendingAction.current = null;
+      toast.success("LENS payment confirmed");
+    } else if (pendingAction.current === "approve") {
+      pendingAction.current = null;
+      toast.success("LENS approved for the oracle");
     }
   }, [payReceipt.isSuccess]);
+
+  useEffect(() => {
+    if (payWrite.error) {
+      toast.error(payWrite.error.message);
+    }
+  }, [payWrite.error]);
 
   const approveOracle = () => {
     if (!address || !needsLensPayment) return;
@@ -111,6 +124,24 @@ export function ModelPredictPanel({ model }: Props) {
     },
   });
 
+  const asyncToastKey = useRef<string | null>(null);
+  useEffect(() => {
+    const st = poll.data?.state;
+    const tid = taskId;
+    if (!tid || !st) return;
+    if (st === "SUCCESS" && poll.data?.result) {
+      if (asyncToastKey.current !== `ok-${tid}`) {
+        asyncToastKey.current = `ok-${tid}`;
+        toast.success("Async prediction complete");
+      }
+    } else if (st === "FAILURE") {
+      if (asyncToastKey.current !== `fail-${tid}`) {
+        asyncToastKey.current = `fail-${tid}`;
+        toast.error("Prediction task failed");
+      }
+    }
+  }, [poll.data?.state, poll.data?.result, taskId]);
+
   useEffect(() => {
     if (!predict.isSuccess || !predict.data?.async_mode || !predict.data.task_id) {
       return;
@@ -121,17 +152,34 @@ export function ModelPredictPanel({ model }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setTaskId(null);
+    asyncToastKey.current = null;
     if (!features) {
+      if (rawFeatures.trim() !== "") {
+        toast.warning("Invalid features format");
+      }
       return;
     }
     if (!canRunInference) {
+      toast.warning("Pay the LENS fee first");
       return;
     }
-    void predict.mutateAsync({
-      modelId: model.id,
-      features,
-      asyncMode,
-    });
+    void predict
+      .mutateAsync({
+        modelId: model.id,
+        features,
+        asyncMode,
+      })
+      .then((data) => {
+        if (data.async_mode) {
+          toast.info("Task queued — results will appear when ready.");
+        } else {
+          toast.success("Prediction complete");
+        }
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(msg);
+      });
   };
 
   const syncResult =
@@ -140,9 +188,9 @@ export function ModelPredictPanel({ model }: Props) {
     poll.data?.state === "SUCCESS" ? poll.data.result : null;
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-      <h2 className="text-lg font-semibold text-white">Inference</h2>
-      <p className="mt-1 text-sm text-slate-400">
+    <div className="surface-card">
+      <h2 className="text-lg font-semibold text-foreground">Inference</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
         Numeric vector (comma-separated or JSON). With a connected wallet, an
         EIP-191 signature is sent if the backend requires it.
       </p>
@@ -185,24 +233,24 @@ export function ModelPredictPanel({ model }: Props) {
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <label className="block">
-          <span className="text-xs font-medium uppercase text-slate-500">
+          <span className="text-xs font-medium uppercase text-muted-foreground">
             Features
           </span>
           <textarea
             value={rawFeatures}
             onChange={(e) => setRawFeatures(e.target.value)}
             rows={4}
-            className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="input-field mt-2 min-h-[7rem] w-full resize-y font-mono text-sm"
             placeholder="0.1, 0.2 or [0.1, 0.2]"
           />
         </label>
 
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-card-foreground">
           <input
             type="checkbox"
             checked={asyncMode}
             onChange={(e) => setAsyncMode(e.target.checked)}
-            className="rounded border-slate-600"
+            className="rounded border-border/30 bg-background text-accent focus:ring-accent"
           />
           Async queue (Celery)
         </label>
@@ -210,7 +258,7 @@ export function ModelPredictPanel({ model }: Props) {
         <button
           type="submit"
           disabled={!features || predict.isPending || !canRunInference}
-          className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className={`${primaryButtonClass} disabled:cursor-not-allowed`}
         >
           {predict.isPending
             ? "Running…"
@@ -227,25 +275,25 @@ export function ModelPredictPanel({ model }: Props) {
       )}
 
       {predict.isError && (
-        <pre className="mt-4 overflow-x-auto rounded-lg bg-red-950/40 p-3 text-xs text-red-100">
+        <pre className="mt-4 overflow-x-auto rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive-foreground">
           {String(predict.error)}
         </pre>
       )}
 
       {syncResult && (
-        <pre className="mt-4 overflow-x-auto rounded-lg bg-slate-950/80 p-4 font-mono text-sm text-emerald-100">
+        <pre className="mt-4 overflow-x-auto rounded-lg border border-border/10 bg-background/90 p-4 font-mono text-sm text-emerald-300/90">
           {JSON.stringify(syncResult, null, 2)}
         </pre>
       )}
 
       {taskId && poll.isFetching && (
-        <p className="mt-4 text-sm text-slate-400">
+        <p className="mt-4 text-sm text-muted-foreground">
           Task {taskId}: {poll.data?.state ?? "PENDING"}…
         </p>
       )}
 
       {asyncResult && (
-        <pre className="mt-4 overflow-x-auto rounded-lg bg-slate-950/80 p-4 font-mono text-sm text-emerald-100">
+        <pre className="mt-4 overflow-x-auto rounded-lg border border-border/10 bg-background/90 p-4 font-mono text-sm text-emerald-300/90">
           {JSON.stringify(asyncResult, null, 2)}
         </pre>
       )}

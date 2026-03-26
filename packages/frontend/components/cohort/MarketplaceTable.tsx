@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { formatEther } from "viem";
 
+import { primaryButtonSmClass } from "@/lib/button-classes";
 import type { LensPublic } from "@/types/model";
 
 type Props = {
@@ -20,40 +21,37 @@ function weiToEthLabel(wei: number): string {
 export function MarketplaceTable({ models }: Props) {
   if (models.length === 0) {
     return (
-      <p className="rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-8 text-center text-slate-400">
+      <p className="rounded-xl border border-border/10 bg-card/40 px-4 py-8 text-center text-muted-foreground">
         No registered models. Upload one via the API or sync from chain.
       </p>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40">
+    <div className="overflow-hidden rounded-xl border border-border/10 bg-card/40 backdrop-blur-sm">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-slate-800 bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+        <thead className="border-b border-border/10 bg-card/70 text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
             <th className="px-4 py-3 font-medium">Name</th>
             <th className="px-4 py-3 font-medium">Owner</th>
             <th className="px-4 py-3 font-medium">Format</th>
             <th className="px-4 py-3 font-medium">Price (LENS)</th>
-            <th className="px-4 py-3 font-medium text-right">Action</th>
+            <th className="px-4 py-3 text-right font-medium">Action</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800">
+        <tbody className="divide-y divide-border/10">
           {models.map((m) => (
-            <tr key={m.id} className="hover:bg-slate-800/40">
-              <td className="px-4 py-3 font-medium text-white">{m.name}</td>
-              <td className="px-4 py-3 font-mono text-xs text-slate-400">
+            <tr key={m.id} className="transition-colors hover:bg-card/50">
+              <td className="px-4 py-3 font-medium text-foreground">{m.name}</td>
+              <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                 {m.owner.slice(0, 6)}…{m.owner.slice(-4)}
               </td>
-              <td className="px-4 py-3 text-slate-300">{m.model_format}</td>
-              <td className="px-4 py-3 text-slate-300">
+              <td className="px-4 py-3 text-card-foreground">{m.model_format}</td>
+              <td className="px-4 py-3 text-card-foreground">
                 {weiToEthLabel(m.price_per_query_wei)}
               </td>
               <td className="px-4 py-3 text-right">
-                <Link
-                  href={`/models/${m.id}`}
-                  className="inline-flex rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-indigo-500"
-                >
+                <Link href={`/models/${m.id}`} className={primaryButtonSmClass}>
                   Use model
                 </Link>
               </td>

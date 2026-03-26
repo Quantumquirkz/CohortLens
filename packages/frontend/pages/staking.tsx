@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { formatEther, parseEther } from "viem";
 import {
@@ -9,12 +10,25 @@ import {
   useWriteContract,
 } from "wagmi";
 
+import {
+  positiveButtonClass,
+  primaryButtonClass,
+  primarySoftButtonClass,
+} from "@/lib/button-classes";
 import { erc20Abi, stakingAbi } from "@/lib/tokenomics-abi";
 import {
   LENS_TOKEN_ADDRESS,
   STAKING_ADDRESS,
   tokenomicsConfigured,
 } from "@/lib/tokenomics-config";
+
+function EnvHintCode({ children }: { children: ReactNode }) {
+  return (
+    <code className="rounded-md border border-border/10 bg-card px-1.5 py-0.5 font-mono text-xs text-card-foreground">
+      {children}
+    </code>
+  );
+}
 
 export default function StakingPage() {
   const { address, isConnected } = useAccount();
@@ -96,11 +110,13 @@ export default function StakingPage() {
   if (!tokenomicsConfigured()) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-12">
-        <h1 className="text-2xl font-semibold text-white">Staking</h1>
-        <p className="mt-4 text-slate-400">
-          Set <code className="rounded bg-slate-900 px-1">NEXT_PUBLIC_LENS_TOKEN_ADDRESS</code>{" "}
-          and <code className="rounded bg-slate-900 px-1">NEXT_PUBLIC_STAKING_ADDRESS</code>{" "}
-          after deploying contracts.
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Staking
+        </h1>
+        <p className="mt-4 text-muted-foreground">
+          Set <EnvHintCode>NEXT_PUBLIC_LENS_TOKEN_ADDRESS</EnvHintCode> and{" "}
+          <EnvHintCode>NEXT_PUBLIC_STAKING_ADDRESS</EnvHintCode> after deploying
+          contracts.
         </p>
       </section>
     );
@@ -108,33 +124,37 @@ export default function StakingPage() {
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-2xl font-semibold text-white">Stake LENS</h1>
-      <p className="mt-2 text-sm text-slate-400">
-        Approve the staking contract, then stake or withdraw. Use the same wallet you use for
-        model registration when the backend checks stake.
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        Stake LENS
+      </h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Approve the staking contract, then stake or withdraw. Use the same wallet
+        you use for model registration when the backend checks stake.
       </p>
 
       {!isConnected && (
-        <p className="mt-6 text-amber-200">Connect a wallet to continue.</p>
+        <p className="mt-6 rounded-lg border border-amber-500/25 bg-amber-950/20 px-4 py-3 text-sm text-amber-100">
+          Connect a wallet to continue.
+        </p>
       )}
 
       {address && (
-        <div className="mt-6 space-y-4 rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-          <p className="text-sm text-slate-300">
+        <div className="surface-card mt-6 space-y-4">
+          <p className="text-sm text-card-foreground">
             LENS balance:{" "}
-            <span className="font-mono text-white">
+            <span className="font-mono text-foreground">
               {lensBal.data !== undefined ? formatEther(lensBal.data) : "…"}
             </span>
           </p>
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-card-foreground">
             Staked:{" "}
-            <span className="font-mono text-white">
+            <span className="font-mono text-foreground">
               {staked.data !== undefined ? formatEther(staked.data) : "…"}
             </span>
           </p>
 
           <label className="block text-sm">
-            <span className="text-slate-500">Amount (LENS)</span>
+            <span className="text-muted-foreground">Amount (LENS)</span>
             <input
               type="text"
               value={amount}
@@ -144,17 +164,19 @@ export default function StakingPage() {
                   setInputError(null);
                 }
               }}
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-white"
+              className="input-field mt-1.5 font-mono"
             />
           </label>
-          {inputError && <p className="text-sm text-red-300">{inputError}</p>}
+          {inputError && (
+            <p className="text-sm text-destructive">{inputError}</p>
+          )}
 
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => void approveAndStake()}
               disabled={isPending || isConfirming}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-500 disabled:opacity-50"
+              className={primaryButtonClass}
             >
               Approve
             </button>
@@ -162,7 +184,7 @@ export default function StakingPage() {
               type="button"
               onClick={() => void stakeAfterApprove()}
               disabled={isPending || isConfirming}
-              className="rounded-lg bg-emerald-700 px-4 py-2 text-sm text-white hover:bg-emerald-600 disabled:opacity-50"
+              className={positiveButtonClass}
             >
               Stake
             </button>
@@ -170,20 +192,20 @@ export default function StakingPage() {
               type="button"
               onClick={() => void withdraw()}
               disabled={isPending || isConfirming}
-              className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+              className={primarySoftButtonClass}
             >
               Withdraw
             </button>
           </div>
 
           {hash && (
-            <p className="font-mono text-xs text-slate-500">
+            <p className="font-mono text-xs text-muted-foreground">
               Tx: {hash}
               {isSuccess ? " ✓" : isConfirming ? " …" : ""}
             </p>
           )}
           {error && (
-            <p className="text-sm text-red-300">{String(error.message)}</p>
+            <p className="text-sm text-destructive">{String(error.message)}</p>
           )}
         </div>
       )}

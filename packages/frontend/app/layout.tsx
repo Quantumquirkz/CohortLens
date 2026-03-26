@@ -22,10 +22,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <Providers>
-          <AppHeader />
-          <main>{children}</main>
+          <div className="relative min-h-screen bg-radial-glow bg-no-repeat">
+            <AppHeader />
+            <main className="relative">{children}</main>
+          </div>
         </Providers>
       </body>
     </html>

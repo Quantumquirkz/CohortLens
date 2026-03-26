@@ -1,5 +1,9 @@
 "use client";
 
+import { primaryButtonClass } from "@/lib/button-classes";
+
+import "@/styles/globals.css";
+
 export default function GlobalError({
   error,
   reset,
@@ -9,15 +13,15 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en">
-      <body className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 text-center text-slate-100">
+      <body className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center text-foreground">
         <h2 className="text-xl font-semibold">Critical error</h2>
-        <p className="mt-2 max-w-md text-sm text-slate-400">
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">
           {error.message || "Could not render the application."}
         </p>
         <button
           type="button"
           onClick={() => reset()}
-          className="mt-6 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+          className={`${primaryButtonClass} mt-6`}
         >
           Retry
         </button>

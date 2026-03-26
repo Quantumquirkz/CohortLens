@@ -84,6 +84,24 @@ class Settings(BaseSettings):
         description="Comma-separated browser origins for CORS",
     )
     LOG_LEVEL: str = Field(default="INFO", description="Python logging level (e.g. INFO, DEBUG)")
+    GRAPHQL_ENABLED: bool = Field(
+        default=True,
+        description="Enable GraphQL read endpoint at /graphql",
+    )
+    GRAPHQL_INTROSPECTION: bool = Field(
+        default=True,
+        description="Allow GraphQL introspection (disable in production)",
+    )
+    GRAPHQL_MAX_DEPTH: int = Field(
+        default=8,
+        ge=1,
+        description="Maximum allowed GraphQL query depth",
+    )
+    GRAPHQL_MAX_ALIASES: int = Field(
+        default=30,
+        ge=1,
+        description="Maximum aliases per GraphQL operation",
+    )
 
     REQUIRE_LENS_PAYMENT_FOR_DISCOVER: bool = Field(
         default=False,

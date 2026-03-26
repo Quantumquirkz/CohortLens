@@ -1,15 +1,19 @@
 import Link from "next/link";
 
+import { ChainBadge } from "@/components/ui/ChainBadge";
 import { WalletButton } from "@/components/ui/WalletButton";
 
 const navLinkClass =
-  "text-sm font-medium text-slate-300 transition hover:text-white";
+  "text-sm font-medium text-muted-foreground transition duration-200 hover:text-foreground";
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-border/10 bg-background/75 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-white">
+        <Link
+          href="/"
+          className="text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-90"
+        >
           CohortLens
         </Link>
         <nav className="flex flex-1 items-center justify-center gap-6 sm:gap-8">
@@ -32,7 +36,8 @@ export function AppHeader() {
             Governance
           </Link>
         </nav>
-        <div className="shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
+          <ChainBadge />
           <WalletButton />
         </div>
       </div>

@@ -76,6 +76,26 @@ celery -A app.tasks.celery_app beat --loglevel=info
 
 The `scan_and_fulfill_oracle` task runs every 30s, reads `PredictionRequested` events, loads the gzip result from Redis (`oracle:pending:<id>`), and sends `fulfillRequest`.
 
+## GraphQL read BFF (`/graphql`)
+
+The backend exposes a read-only GraphQL endpoint to reduce frontend overfetching while keeping
+sensitive mutations in REST.
+
+- Endpoint: `POST /graphql`
+- Suggested env:
+  - `GRAPHQL_ENABLED=true`
+  - `GRAPHQL_INTROSPECTION=false` in production
+  - `GRAPHQL_MAX_DEPTH=8`
+  - `GRAPHQL_MAX_ALIASES=30`
+
+Initial queries:
+
+- `homeStatus`
+- `models(...)` (filters + pagination)
+- `model(id: Int!)`
+- `dashboardSummary(protocol, chain, startBlock, endBlock)`
+- `predictionTask(taskId: String!)`
+
 ## `/api/v1/cohorts/discover` flow
 
 1. GraphQL: aggregate per user `tx_count`, `volume`, `avg_gas` over the block range (`protocol` must match Aave v3, e.g. `aave-v3`).

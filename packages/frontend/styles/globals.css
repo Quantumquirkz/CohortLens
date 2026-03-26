@@ -1,3 +1,90 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 3.5%;
+    --foreground: 0 0% 98%;
+    --muted: 215 16% 47%;
+    --muted-foreground: 215 20% 65%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 98%;
+    --border: 0 0% 100%;
+    --accent: 239 84% 67%;
+    --accent-hover: 239 84% 72%;
+    --accent-foreground: 0 0% 100%;
+    --ring: 239 84% 67%;
+    --glow: 239 70% 50%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+  }
+
+  body {
+    @apply min-h-screen bg-background font-sans text-foreground antialiased;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition duration-200 hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary-sm {
+    @apply inline-flex items-center justify-center rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background shadow-sm transition duration-200 hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98];
+  }
+
+  .btn-primary-soft {
+    @apply inline-flex items-center justify-center rounded-lg border border-border/15 bg-card/80 px-5 py-2.5 text-sm font-medium text-foreground shadow-sm backdrop-blur-sm transition duration-200 hover:border-muted-foreground/35 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .input-field {
+    @apply rounded-lg border border-border/15 bg-background px-3 py-2 text-foreground placeholder:text-muted-foreground/70 focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40;
+  }
+
+  .surface-card {
+    @apply rounded-xl border border-border/10 bg-card/50 p-6 shadow-xl backdrop-blur-sm;
+  }
+
+  .btn-positive {
+    @apply inline-flex items-center justify-center rounded-lg border border-emerald-500/35 bg-emerald-950/30 px-4 py-2 text-sm font-medium text-emerald-100 transition duration-200 hover:border-emerald-500/55 hover:bg-emerald-950/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-danger-soft {
+    @apply inline-flex items-center justify-center rounded-lg border border-red-500/35 bg-red-950/25 px-4 py-2 text-sm font-medium text-red-100 transition duration-200 hover:border-red-500/50 hover:bg-red-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .feature-card {
+    @apply block rounded-xl border border-border/10 bg-card/35 p-5 transition duration-200 hover:border-border/25 hover:bg-card/55;
+  }
+}
