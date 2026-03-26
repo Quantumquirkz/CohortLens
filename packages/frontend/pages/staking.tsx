@@ -123,14 +123,19 @@ export default function StakingPage() {
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+    <section className="mx-auto max-w-3xl px-4 py-10">
+      <div className="surface-card">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-200">
+          Tokenomics
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
         Stake LENS
-      </h1>
-      <p className="mt-2 text-sm text-muted-foreground">
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
         Approve the staking contract, then stake or withdraw. Use the same wallet
         you use for model registration when the backend checks stake.
-      </p>
+        </p>
+      </div>
 
       {!isConnected && (
         <p className="mt-6 rounded-lg border border-amber-500/25 bg-amber-950/20 px-4 py-3 text-sm text-amber-100">
@@ -167,9 +172,7 @@ export default function StakingPage() {
               className="input-field mt-1.5 font-mono"
             />
           </label>
-          {inputError && (
-            <p className="text-sm text-destructive">{inputError}</p>
-          )}
+          {inputError && <p className="text-sm text-destructive">{inputError}</p>}
 
           <div className="flex flex-wrap gap-2">
             <button

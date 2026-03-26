@@ -17,10 +17,10 @@ export function CohortTable({ cohorts, totalUsers }: CohortTableProps) {
         Total users:{" "}
         <span className="font-mono text-card-foreground">{totalUsers}</span>
       </p>
-      <div className="overflow-x-auto rounded-xl border border-border/10 bg-card/40 shadow-inner backdrop-blur-sm">
-        <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+      <div className="data-table-wrap overflow-x-auto">
+        <table className="data-table min-w-[640px] border-collapse">
           <thead>
-            <tr className="border-b border-border/10 bg-card/60 text-muted-foreground">
+            <tr className="data-table-head">
               <th className="px-4 py-3 font-medium">Cohort ID</th>
               <th className="px-4 py-3 font-medium">Size</th>
               <th className="px-4 py-3 font-medium">Centroids</th>
@@ -33,7 +33,7 @@ export function CohortTable({ cohorts, totalUsers }: CohortTableProps) {
               return (
                 <tr
                   key={row.id}
-                  className="border-b border-border/10 last:border-0"
+                  className="border-b border-border/50 last:border-0"
                 >
                   <td className="px-4 py-3 align-top font-mono text-card-foreground">
                     {row.id}
@@ -53,7 +53,7 @@ export function CohortTable({ cohorts, totalUsers }: CohortTableProps) {
                     </div>
                   </td>
                   <td className="px-4 py-3 align-top">
-                    <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border/10 bg-background/80 p-3 font-mono text-xs text-muted-foreground">
+                    <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-border/60 bg-background/75 p-3 font-mono text-xs text-muted-foreground">
                       {JSON.stringify(row.center, null, 2)}
                     </pre>
                   </td>

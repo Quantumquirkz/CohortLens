@@ -111,12 +111,15 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+    <div className="mx-auto max-w-5xl px-4 py-10">
+      <header className="surface-card mb-8">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-200">
+          Analytics Terminal
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
           Cohort discovery
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           Send parameters to the backend and review clusters (POST{" "}
           <code className="rounded-md border border-border/10 bg-card px-1.5 py-0.5 font-mono text-xs text-card-foreground">
             /api/v1/cohorts/discover
@@ -127,21 +130,21 @@ export default function DashboardPage() {
 
       {USE_GRAPHQL_READS && summary.data && (
         <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-border/10 bg-card/40 p-3">
+          <div className="surface-panel">
             <p className="text-xs text-muted-foreground">Users</p>
             <p className="text-lg font-semibold text-foreground">{summary.data.totalUsers}</p>
           </div>
-          <div className="rounded-lg border border-border/10 bg-card/40 p-3">
+          <div className="surface-panel">
             <p className="text-xs text-muted-foreground">Tx count</p>
             <p className="text-lg font-semibold text-foreground">{summary.data.txCount}</p>
           </div>
-          <div className="rounded-lg border border-border/10 bg-card/40 p-3">
+          <div className="surface-panel">
             <p className="text-xs text-muted-foreground">Total volume</p>
             <p className="text-lg font-semibold text-foreground">
               {summary.data.totalVolume.toFixed(2)}
             </p>
           </div>
-          <div className="rounded-lg border border-border/10 bg-card/40 p-3">
+          <div className="surface-panel">
             <p className="text-xs text-muted-foreground">Avg gas</p>
             <p className="text-lg font-semibold text-foreground">
               {summary.data.avgGas.toFixed(0)}
@@ -219,7 +222,7 @@ export default function DashboardPage() {
         </div>
 
         {(clientError || apiError) && (
-          <p className="mt-4 rounded-lg border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm text-destructive-foreground">
+          <p className="mt-4 rounded-xl border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm text-destructive-foreground">
             {clientError ?? apiError}
           </p>
         )}

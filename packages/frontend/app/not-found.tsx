@@ -13,7 +13,7 @@ export default function NotFound() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
-      <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
+      <p className="rounded-full border border-cyan-300/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-cyan-200">
         404
       </p>
       <h1 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">

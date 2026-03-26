@@ -25,8 +25,12 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased">
         <Providers>
           <div className="relative min-h-screen bg-radial-glow bg-no-repeat">
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-cyan-500/10 to-transparent"
+              aria-hidden
+            />
             <AppHeader />
-            <main className="relative">{children}</main>
+            <main className="relative pb-10">{children}</main>
           </div>
         </Providers>
       </body>

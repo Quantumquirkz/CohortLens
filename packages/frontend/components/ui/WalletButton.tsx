@@ -12,7 +12,7 @@ export function WalletButton() {
 
   if (isConnected && address) {
     return (
-      <span className="rounded-lg border border-border/15 bg-card/90 px-3 py-1.5 font-mono text-xs text-card-foreground shadow-sm backdrop-blur-sm transition-colors duration-200 sm:text-sm">
+      <span className="rounded-full border border-cyan-300/25 bg-card/95 px-3 py-1.5 font-mono text-xs text-card-foreground shadow-sm backdrop-blur-sm transition-colors duration-200 sm:text-sm">
         {address.slice(0, 6)}…{address.slice(-4)}
       </span>
     );

@@ -53,7 +53,7 @@ export function HomeFeatures() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="mx-auto max-w-5xl px-4 pb-24 pt-4">
+    <section className="mx-auto max-w-5xl px-4 pb-24 pt-6">
       <motion.h2
         className="mb-10 text-center text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground"
         initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
@@ -61,7 +61,7 @@ export function HomeFeatures() {
         viewport={{ once: true, margin: "-40px" }}
         transition={{ duration: 0.35 }}
       >
-        Explore the product
+        Explore platform modules
       </motion.h2>
       <motion.div
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -74,7 +74,7 @@ export function HomeFeatures() {
           <motion.div key={item.href} variants={cardVariants(!!reduceMotion)}>
             <Link href={item.href} className="feature-card group h-full">
               <span className="flex items-start justify-between gap-2">
-                <span className="text-base font-medium text-foreground">
+                <span className="text-base font-semibold text-foreground">
                   {item.title}
                 </span>
                 <span

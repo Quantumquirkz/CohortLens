@@ -4,24 +4,28 @@
 
 @layer base {
   :root {
-    --background: 0 0% 3.5%;
+    --background: 252 32% 7%;
     --foreground: 0 0% 98%;
-    --muted: 215 16% 47%;
-    --muted-foreground: 215 20% 65%;
-    --card: 0 0% 6%;
+    --muted: 243 18% 39%;
+    --muted-foreground: 244 12% 72%;
+    --card: 246 31% 11%;
     --card-foreground: 0 0% 98%;
-    --border: 0 0% 100%;
-    --accent: 239 84% 67%;
-    --accent-hover: 239 84% 72%;
+    --border: 244 34% 23%;
+    --accent: 188 97% 55%;
+    --accent-hover: 188 97% 62%;
     --accent-foreground: 0 0% 100%;
-    --ring: 239 84% 67%;
-    --glow: 239 70% 50%;
+    --ring: 188 97% 55%;
+    --glow: 189 100% 62%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
   }
 
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
+    background-image:
+      radial-gradient(1200px 600px at 50% -15%, hsl(188 97% 55% / 0.14), transparent 55%),
+      radial-gradient(900px 500px at 110% 15%, hsl(192 100% 60% / 0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 70%, hsl(189 100% 62% / 0.09), transparent 60%);
   }
 }
 
@@ -57,34 +61,58 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition duration-200 hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-sky-400 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_28px_hsl(188_97%_55%/0.35)] transition duration-200 hover:from-cyan-400 hover:to-sky-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-primary-sm {
-    @apply inline-flex items-center justify-center rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background shadow-sm transition duration-200 hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98];
+    @apply inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-sky-400 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_8px_24px_hsl(188_97%_55%/0.25)] transition duration-200 hover:from-cyan-400 hover:to-sky-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98];
   }
 
   .btn-primary-soft {
-    @apply inline-flex items-center justify-center rounded-lg border border-border/15 bg-card/80 px-5 py-2.5 text-sm font-medium text-foreground shadow-sm backdrop-blur-sm transition duration-200 hover:border-muted-foreground/35 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full border border-cyan-300/20 bg-card/80 px-5 py-2.5 text-sm font-medium text-foreground shadow-sm backdrop-blur-sm transition duration-200 hover:border-cyan-300/45 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
   }
 
   .input-field {
-    @apply rounded-lg border border-border/15 bg-background px-3 py-2 text-foreground placeholder:text-muted-foreground/70 focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40;
+    @apply rounded-xl border border-border/60 bg-background/80 px-3 py-2 text-foreground placeholder:text-muted-foreground/70 focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40;
   }
 
   .surface-card {
-    @apply rounded-xl border border-border/10 bg-card/50 p-6 shadow-xl backdrop-blur-sm;
+    @apply rounded-2xl border border-border/70 bg-card/65 p-6 shadow-[0_16px_44px_hsl(252_40%_4%/0.5)] backdrop-blur-sm;
+  }
+
+  .surface-panel {
+    @apply rounded-2xl border border-border/70 bg-card/45 p-4 shadow-[0_12px_28px_hsl(252_40%_4%/0.45)] backdrop-blur-sm;
   }
 
   .btn-positive {
-    @apply inline-flex items-center justify-center rounded-lg border border-emerald-500/35 bg-emerald-950/30 px-4 py-2 text-sm font-medium text-emerald-100 transition duration-200 hover:border-emerald-500/55 hover:bg-emerald-950/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full border border-emerald-500/35 bg-emerald-950/30 px-4 py-2 text-sm font-medium text-emerald-100 transition duration-200 hover:border-emerald-500/55 hover:bg-emerald-950/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-danger-soft {
-    @apply inline-flex items-center justify-center rounded-lg border border-red-500/35 bg-red-950/25 px-4 py-2 text-sm font-medium text-red-100 transition duration-200 hover:border-red-500/50 hover:bg-red-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full border border-red-500/35 bg-red-950/25 px-4 py-2 text-sm font-medium text-red-100 transition duration-200 hover:border-red-500/50 hover:bg-red-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50;
   }
 
   .feature-card {
-    @apply block rounded-xl border border-border/10 bg-card/35 p-5 transition duration-200 hover:border-border/25 hover:bg-card/55;
+    @apply block rounded-2xl border border-border/65 bg-card/50 p-5 transition duration-200 hover:border-cyan-300/30 hover:bg-card/80 hover:shadow-[0_14px_36px_hsl(188_97%_55%/0.15)];
+  }
+
+  .data-table-wrap {
+    @apply overflow-hidden rounded-2xl border border-border/65 bg-card/45 backdrop-blur-sm;
+  }
+
+  .data-table {
+    @apply w-full text-left text-sm;
+  }
+
+  .data-table-head {
+    @apply border-b border-border/60 bg-card/75 text-xs uppercase tracking-wide text-muted-foreground;
+  }
+
+  .data-table-row {
+    @apply transition-colors hover:bg-card/65;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/55 px-3 py-1 text-xs font-medium text-muted-foreground;
   }
 }

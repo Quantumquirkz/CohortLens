@@ -51,20 +51,20 @@ export default function MarketplacePage() {
   const error = usingGraphql ? gql.error : rest.error;
 
   const toggleBase =
-    "rounded-lg border px-4 py-2 text-sm font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+    "rounded-full border px-4 py-2 text-sm font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
   const toggleInactive = `${toggleBase} border-border/15 text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground`;
   const toggleActive = `${toggleBase} border-accent/60 bg-accent/10 text-accent`;
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <motion.div
-        className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+        className="surface-card mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
         initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-200">
             Marketplace
           </p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">
@@ -119,7 +119,7 @@ export default function MarketplacePage() {
         <p className="mb-4 text-xs text-muted-foreground/80">Refreshing…</p>
       )}
       {error && (
-        <p className="rounded-lg border border-destructive/35 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
+        <p className="rounded-xl border border-destructive/35 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
           Could not load the list. Check NEXT_PUBLIC_API_URL and that the backend
           is running.
         </p>

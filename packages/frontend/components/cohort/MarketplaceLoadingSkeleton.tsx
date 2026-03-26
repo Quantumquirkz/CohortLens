@@ -2,8 +2,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export function MarketplaceLoadingSkeleton() {
   return (
-    <div className="overflow-hidden rounded-xl border border-border/10 bg-card/30">
-      <div className="space-y-0 divide-y divide-border/10">
+    <div className="data-table-wrap">
+      <div className="space-y-0 divide-y divide-border/50">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 px-4 py-3">
             <Skeleton className="h-4 flex-1 max-w-[12rem]" />

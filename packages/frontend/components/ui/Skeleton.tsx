@@ -3,12 +3,12 @@ type SkeletonProps = {
 };
 
 /**
- * Pulse placeholder aligned with dark tokens (`border-border/10`, `bg-card/40`).
+ * Pulse placeholder aligned with the exchange dark UI tokens.
  */
 export function Skeleton({ className = "" }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse rounded-md border border-border/10 bg-card/40 ${className}`}
+      className={`animate-pulse rounded-xl border border-border/60 bg-card/55 ${className}`}
       aria-hidden
     />
   );

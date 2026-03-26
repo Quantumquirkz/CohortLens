@@ -196,7 +196,7 @@ export function ModelPredictPanel({ model }: Props) {
       </p>
 
       {needsLensPayment && (
-        <div className="mt-6 rounded-lg border border-amber-900/50 bg-amber-950/20 p-4">
+        <div className="surface-panel mt-6 border-amber-900/50 bg-amber-950/20">
           <p className="text-sm font-medium text-amber-100">On-chain LENS fee</p>
           <p className="mt-1 text-xs text-amber-200/90">
             Approve and pay {formatEther(priceWei)} LENS to the oracle before running inference
@@ -211,7 +211,7 @@ export function ModelPredictPanel({ model }: Props) {
                 type="button"
                 onClick={() => void approveOracle()}
                 disabled={payWrite.isPending || lensPaymentDone}
-                className="rounded-lg bg-amber-700 px-3 py-1.5 text-xs text-white hover:bg-amber-600 disabled:opacity-50"
+                className="rounded-full bg-amber-700 px-3 py-1.5 text-xs text-white transition hover:bg-amber-600 disabled:opacity-50"
               >
                 Approve LENS
               </button>
@@ -219,7 +219,7 @@ export function ModelPredictPanel({ model }: Props) {
                 type="button"
                 onClick={() => void payOracleFee()}
                 disabled={payWrite.isPending || lensPaymentDone}
-                className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs text-white hover:bg-amber-500 disabled:opacity-50"
+                className="rounded-full bg-amber-600 px-3 py-1.5 text-xs text-white transition hover:bg-amber-500 disabled:opacity-50"
               >
                 Confirm payment
               </button>
@@ -275,13 +275,13 @@ export function ModelPredictPanel({ model }: Props) {
       )}
 
       {predict.isError && (
-        <pre className="mt-4 overflow-x-auto rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive-foreground">
+        <pre className="mt-4 overflow-x-auto rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive-foreground">
           {String(predict.error)}
         </pre>
       )}
 
       {syncResult && (
-        <pre className="mt-4 overflow-x-auto rounded-lg border border-border/10 bg-background/90 p-4 font-mono text-sm text-emerald-300/90">
+        <pre className="mt-4 overflow-x-auto rounded-xl border border-border/60 bg-background/80 p-4 font-mono text-sm text-emerald-300/90">
           {JSON.stringify(syncResult, null, 2)}
         </pre>
       )}
@@ -293,7 +293,7 @@ export function ModelPredictPanel({ model }: Props) {
       )}
 
       {asyncResult && (
-        <pre className="mt-4 overflow-x-auto rounded-lg border border-border/10 bg-background/90 p-4 font-mono text-sm text-emerald-300/90">
+        <pre className="mt-4 overflow-x-auto rounded-xl border border-border/60 bg-background/80 p-4 font-mono text-sm text-emerald-300/90">
           {JSON.stringify(asyncResult, null, 2)}
         </pre>
       )}

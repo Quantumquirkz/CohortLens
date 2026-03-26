@@ -84,7 +84,7 @@ export default function ModelDetailPage() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-10">
+    <section className="mx-auto max-w-4xl px-4 py-10">
       <ModelBreadcrumbs modelName={model?.name} />
 
       {isLoading && <ModelDetailSkeleton />}
@@ -95,8 +95,8 @@ export default function ModelDetailPage() {
 
       {model && (
         <>
-          <header className="mt-6 border-b border-border/10 pb-6">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
+          <header className="surface-card mt-6">
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-200">
               Model #{model.id}
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-foreground">
@@ -104,33 +104,33 @@ export default function ModelDetailPage() {
             </h1>
             <p className="mt-3 text-muted-foreground">{model.description}</p>
             <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
-              <div>
+              <div className="surface-panel">
                 <dt className="text-muted-foreground">Owner</dt>
                 <dd className="font-mono text-xs text-card-foreground">
                   {model.owner}
                 </dd>
               </div>
-              <div>
+              <div className="surface-panel">
                 <dt className="text-muted-foreground">CID / model hash</dt>
                 <dd className="break-all font-mono text-xs text-card-foreground">
                   {model.model_hash}
                 </dd>
               </div>
-              <div>
+              <div className="surface-panel">
                 <dt className="text-muted-foreground">Format</dt>
                 <dd className="text-card-foreground">{model.model_format}</dd>
               </div>
-              <div>
+              <div className="surface-panel">
                 <dt className="text-muted-foreground">Type</dt>
                 <dd className="text-card-foreground">{model.model_type || "—"}</dd>
               </div>
-              <div>
+              <div className="surface-panel">
                 <dt className="text-muted-foreground">Price per query</dt>
                 <dd className="text-card-foreground">
                   {weiToEthLabel(model.price_per_query_wei)} LENS
                 </dd>
               </div>
-              <div>
+              <div className="surface-panel">
                 <dt className="text-muted-foreground">Active</dt>
                 <dd className="text-card-foreground">{model.active ? "Yes" : "No"}</dd>
               </div>

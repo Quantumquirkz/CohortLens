@@ -127,14 +127,19 @@ export default function GovernancePage() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+    <section className="mx-auto max-w-4xl px-4 py-10">
+      <div className="surface-card">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-200">
+          Governance Hub
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
         Governance
-      </h1>
-      <p className="mt-2 text-sm text-muted-foreground">
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
         Lists recent ProposalCreated events (last ~20k blocks). Cast votes with
         your delegated voting power (LENS).
-      </p>
+        </p>
+      </div>
 
       {!isConnected && (
         <p className="mt-6 rounded-lg border border-amber-500/25 bg-amber-950/20 px-4 py-3 text-sm text-amber-100">
@@ -148,15 +153,15 @@ export default function GovernancePage() {
         </p>
       )}
 
-      <div className="mt-8 overflow-hidden rounded-xl border border-border/10 bg-card/40 backdrop-blur-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border/10 bg-card/70 text-xs uppercase tracking-wide text-muted-foreground">
+      <div className="data-table-wrap mt-8">
+        <table className="data-table">
+          <thead className="data-table-head">
             <tr>
               <th className="px-4 py-3 font-medium">ID</th>
               <th className="px-4 py-3 font-medium">Description</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/10">
+          <tbody className="divide-y divide-border/50">
             {proposals.length === 0 && (
               <tr>
                 <td colSpan={2} className="px-4 py-6 text-muted-foreground">
@@ -165,7 +170,7 @@ export default function GovernancePage() {
               </tr>
             )}
             {proposals.map((p) => (
-              <tr key={p.proposalId.toString()} className="hover:bg-card/40">
+              <tr key={p.proposalId.toString()} className="data-table-row">
                 <td className="px-4 py-3 font-mono text-foreground">
                   {p.proposalId.toString()}
                 </td>
