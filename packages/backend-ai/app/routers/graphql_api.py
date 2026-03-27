@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import HTTPException, Request
 from graphql import parse
 from strawberry.fastapi import GraphQLRouter
 
@@ -88,8 +88,8 @@ async def guarded_context(request: Request):
 router = GraphQLRouter(
     schema,
     path="/graphql",
-    context_getter=Depends(guarded_context),
-    graphiql=settings.GRAPHQL_INTROSPECTION,
+    context_getter=guarded_context,
+    graphql_ide="graphiql" if settings.GRAPHQL_INTROSPECTION else None,
     allow_queries_via_get=False,
 )
 

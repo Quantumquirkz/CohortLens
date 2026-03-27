@@ -5,6 +5,10 @@ export function modelsListUrl(syncChain = false): string {
   return `${API_BASE_URL}/api/v1/models${q}`;
 }
 
+export function modelDetailUrl(modelId: number): string {
+  return `${API_BASE_URL}/api/v1/models/${modelId}`;
+}
+
 export function modelPredictUrl(
   modelId: number,
   options?: { asyncMode?: boolean },
@@ -18,7 +22,7 @@ export function modelPredictUrl(
 }
 
 export function predictionStatusUrl(taskId: string): string {
-  return `${API_BASE_URL}/api/v1/models/predictions/${taskId}`;
+  return `${API_BASE_URL}/api/v1/predictions/${taskId}/status`;
 }
 
 export function authNonceUrl(): string {

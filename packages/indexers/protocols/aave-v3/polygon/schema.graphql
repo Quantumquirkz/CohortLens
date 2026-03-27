@@ -1,6 +1,18 @@
 type User @entity(immutable: false) {
   id: ID!
   address: Bytes!
+  """First Aave v3 operation block (risk / wallet-age proxy)."""
+  firstActivityBlock: BigInt
+  """Most recent Aave v3 operation block."""
+  lastActivityBlock: BigInt
+  depositCount: BigInt
+  withdrawCount: BigInt
+  borrowCount: BigInt
+  repayCount: BigInt
+  totalDepositVolume: BigInt
+  totalWithdrawVolume: BigInt
+  totalBorrowVolume: BigInt
+  totalRepayVolume: BigInt
   deposits: [Deposit!]! @derivedFrom(field: "user")
   withdrawals: [Withdrawal!]! @derivedFrom(field: "user")
   borrows: [Borrow!]! @derivedFrom(field: "user")

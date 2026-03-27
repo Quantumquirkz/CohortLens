@@ -16,7 +16,7 @@ from app.db.base import Base
 from app.db.session import engine
 from app.limiter import limiter
 from app.middleware.metrics import setup_prometheus
-from app.routers import auth, cohorts, graphql_api, huggingface, models, predictions
+from app.routers import alerts, auth, cohorts, graphql_api, huggingface, models, predictions, risk
 
 
 def _configure_logging() -> None:
@@ -81,6 +81,8 @@ app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
 app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["predictions"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(huggingface.router, prefix="/api/v1/hf", tags=["huggingface"])
+app.include_router(risk.router, prefix="/api/v1/risk", tags=["risk"])
+app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["alerts"])
 app.include_router(graphql_api.router, tags=["graphql"])
 
 

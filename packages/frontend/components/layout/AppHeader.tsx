@@ -34,6 +34,9 @@ export function AppHeader() {
           <Link href="/dashboard" className={navLinkClass}>
             Dashboard
           </Link>
+          <Link href="/risk" className={navLinkClass}>
+            Risk
+          </Link>
           <Link href="/staking" className={navLinkClass}>
             Staking
           </Link>

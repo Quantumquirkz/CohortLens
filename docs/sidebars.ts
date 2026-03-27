@@ -6,6 +6,7 @@ const sidebars: SidebarsConfig = {
     'architecture',
     'deployment',
     'api',
+    'risk-and-aml',
     'contracts',
     'contributing',
     'examples',

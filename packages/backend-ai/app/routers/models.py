@@ -1,6 +1,4 @@
 """Models API (marketplace)."""
-
-from celery.result import AsyncResult
 from eth_account import Account
 from fastapi import (
     APIRouter,
@@ -29,13 +27,14 @@ from app.models.registry import (
     validate_pickle_buffer,
 )
 from app.schemas.models_api import (
+    LensDetail,
     LensPublic,
     LensUploadResponse,
     PredictRequest,
     PredictResponse,
     PredictTaskStatus,
 )
-from app.services.async_prediction import enqueue_predict
+from app.services.async_prediction import enqueue_predict, get_prediction_task_snapshot
 from app.services.blockchain_client import get_web3
 from app.services.chain_manager import ChainManagerError, get_chain_config
 from app.services.ipfs_client import IpfsError, add_bytes
@@ -46,7 +45,6 @@ from app.services.registry_contract import (
     register_lens,
 )
 from app.services.token_client import balance_of_staked, min_stake_to_register
-from app.tasks.celery_app import celery_app
 
 router = APIRouter()
 
@@ -143,6 +141,38 @@ async def list_models(
         )
         for r in rows
     ]
+
+
+@router.get("/{model_id}", response_model=LensDetail)
+async def get_model_detail(model_id: int, db: Session = Depends(get_db)) -> LensDetail:
+    row = db.get(LensRecord, model_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=f"Lens {model_id} not found")
+    sample_input: list[float] | None = None
+    feature_count: int | None = None
+    if row.model_format.lower() == "onnx":
+        # Keep this lightweight: if we cannot infer, we still return the core detail.
+        try:
+            reg = ModelRegistry(db)
+            feature_count = reg.infer_feature_count(row)
+        except Exception:
+            feature_count = None
+    if feature_count and feature_count > 0:
+        sample_input = [0.0] * feature_count
+    return LensDetail(
+        id=row.id,
+        owner=row.owner,
+        name=row.name,
+        description=row.description,
+        model_hash=row.cid,
+        hf_repo_id=row.hf_repo_id,
+        price_per_query_wei=row.price_per_query_wei,
+        model_format=row.model_format,
+        model_type=row.model_type,
+        active=row.active,
+        feature_count=feature_count,
+        sample_input=sample_input,
+    )
 
 
 @router.post("/upload", response_model=LensUploadResponse)
@@ -265,10 +295,7 @@ async def predict(
 
 
 @router.get("/predictions/{task_id}", response_model=PredictTaskStatus)
-async def prediction_status(task_id: str) -> PredictTaskStatus:
-    r = AsyncResult(task_id, app=celery_app)
-    if r.state == "PENDING":
-        return PredictTaskStatus(task_id=task_id, state=r.state, result=None)
-    if r.successful():
-        return PredictTaskStatus(task_id=task_id, state="SUCCESS", result=r.result)
-    return PredictTaskStatus(task_id=task_id, state=str(r.state), result=None)
+@limiter.limit("60/minute")
+async def prediction_status(request: Request, task_id: str) -> PredictTaskStatus:
+    # Legacy alias endpoint kept for compatibility.
+    return PredictTaskStatus(**get_prediction_task_snapshot(task_id))

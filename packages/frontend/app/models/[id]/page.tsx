@@ -7,12 +7,13 @@ import { formatEther } from "viem";
 import { ModelDetailSkeleton } from "@/components/cohort/ModelDetailSkeleton";
 import { ModelPredictPanel } from "@/components/cohort/ModelPredictPanel";
 import { useGraphqlModel } from "@/hooks/useGraphqlReads";
-import { useModelsList } from "@/hooks/useModelsApi";
+import { useModelDetail, useModelsList } from "@/hooks/useModelsApi";
 import { USE_GRAPHQL_READS } from "@/lib/graphql-client";
+import { toWeiBigInt } from "@/lib/wei";
 
-function weiToEthLabel(wei: number): string {
+function weiToEthLabel(wei: number | string): string {
   try {
-    return formatEther(BigInt(Math.trunc(wei)));
+    return formatEther(toWeiBigInt(wei));
   } catch {
     return String(wei);
   }
@@ -63,10 +64,15 @@ export default function ModelDetailPage() {
 
   const rest = useModelsList(false);
   const gql = useGraphqlModel(id);
+  const detail = useModelDetail(id);
   const usingGraphql = USE_GRAPHQL_READS;
-  const model = usingGraphql ? (gql.data ?? undefined) : rest.data?.find((m) => m.id === id);
-  const isLoading = usingGraphql ? gql.isLoading : rest.isLoading;
-  const error = usingGraphql ? gql.error : rest.error;
+  const fallbackModel =
+    usingGraphql ? (gql.data ?? undefined) : rest.data?.find((m) => m.id === id);
+  const model = detail.data ?? fallbackModel;
+  const isLoading = detail.isLoading || (usingGraphql ? gql.isLoading : rest.isLoading);
+  const error = detail.error ?? (usingGraphql ? gql.error : rest.error);
+  const featureCount = detail.data?.feature_count;
+  const sampleInput = detail.data?.sample_input;
 
   if (Number.isNaN(id) || id < 1) {
     return (
@@ -134,11 +140,28 @@ export default function ModelDetailPage() {
                 <dt className="text-muted-foreground">Active</dt>
                 <dd className="text-card-foreground">{model.active ? "Yes" : "No"}</dd>
               </div>
+              <div className="surface-panel sm:col-span-2">
+                <dt className="text-muted-foreground">Input schema</dt>
+                <dd className="mt-1 text-card-foreground">
+                  {featureCount && featureCount > 0
+                    ? `${featureCount} numeric features`
+                    : "No explicit shape metadata"}
+                </dd>
+                {sampleInput && sampleInput.length > 0 && (
+                  <pre className="mt-2 overflow-x-auto rounded-xl border border-border/60 bg-background/80 p-2 font-mono text-xs text-muted-foreground">
+                    {JSON.stringify(sampleInput)}
+                  </pre>
+                )}
+              </div>
             </dl>
           </header>
 
           <div className="mt-8">
-            <ModelPredictPanel model={model} />
+            <ModelPredictPanel
+              model={model}
+              featureCount={featureCount}
+              sampleInput={sampleInput}
+            />
           </div>
         </>
       )}

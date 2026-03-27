@@ -2,17 +2,19 @@ import time
 from typing import Annotated
 
 import jwt
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from app.core.config import settings
 from app.deps.auth_wallet import issue_nonce, verify_wallet_signature
+from app.limiter import limiter
 
 router = APIRouter()
 
 
 @router.get("/nonce")
-async def get_nonce() -> dict[str, str]:
+@limiter.limit("60/minute")
+async def get_nonce(request: Request) -> dict[str, str]:
     return {"nonce": issue_nonce()}
 
 
@@ -23,7 +25,9 @@ class PostgrestTokenResponse(BaseModel):
 
 
 @router.post("/postgrest-token", response_model=PostgrestTokenResponse)
+@limiter.limit("30/minute")
 async def postgrest_token(
+    request: Request,
     x_wallet_address: Annotated[str | None, Header(alias="X-Wallet-Address")] = None,
     x_wallet_signature: Annotated[str | None, Header(alias="X-Wallet-Signature")] = None,
     x_wallet_nonce: Annotated[str | None, Header(alias="X-Wallet-Nonce")] = None,

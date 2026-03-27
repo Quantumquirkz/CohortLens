@@ -6,10 +6,15 @@ export type LensPublic = {
   description: string;
   model_hash: string;
   hf_repo_id?: string | null;
-  price_per_query_wei: number;
+  price_per_query_wei: number | string;
   model_format: string;
   model_type: string;
   active: boolean;
+};
+
+export type LensDetail = LensPublic & {
+  feature_count?: number | null;
+  sample_input?: number[] | null;
 };
 
 export type PredictResponse = {
@@ -19,8 +24,18 @@ export type PredictResponse = {
   async_mode: boolean;
 };
 
+export type PredictTaskState =
+  | "PENDING"
+  | "STARTED"
+  | "RETRY"
+  | "SUCCESS"
+  | "FAILURE"
+  | "REVOKED";
+
 export type PredictTaskStatus = {
   task_id: string;
-  state: string;
+  state: PredictTaskState | string;
   result: Record<string, unknown> | null;
+  error?: string | null;
+  updated_at?: string;
 };

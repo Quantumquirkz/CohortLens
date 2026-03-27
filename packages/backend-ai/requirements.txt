@@ -24,4 +24,4 @@ prometheus-fastapi-instrumentator==6.1.0
 sentry-sdk[fastapi]==2.19.0
 huggingface_hub==0.28.1
 PyJWT==2.12.0
-strawberry-graphql==0.246.1
+strawberry-graphql==0.312.2

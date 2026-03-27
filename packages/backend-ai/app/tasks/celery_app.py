@@ -17,6 +17,7 @@ celery_app = Celery(
         "app.tasks.oracle_tasks",
         "app.tasks.model_tasks",
         "app.tasks.zk_tasks",
+        "app.tasks.aml_tasks",
     ],
 )
 
@@ -43,11 +44,17 @@ celery_app.conf.update(
             exchange=default_exchange,
             routing_key="zk_tasks",
         ),
+        Queue(
+            "aml_tasks",
+            exchange=default_exchange,
+            routing_key="aml_tasks",
+        ),
     ),
     task_routes={
         "app.tasks.oracle_tasks.*": {"queue": "ml_tasks"},
         "app.tasks.model_tasks.*": {"queue": "prediction_tasks"},
         "app.tasks.zk_tasks.*": {"queue": "zk_tasks"},
+        "app.tasks.aml_tasks.*": {"queue": "aml_tasks"},
     },
 )
 

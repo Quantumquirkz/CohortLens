@@ -20,3 +20,5 @@ class AsyncPredictionTaskStatus(BaseModel):
     task_id: str
     state: str
     result: dict | None = None
+    error: str | None = None
+    updated_at: str

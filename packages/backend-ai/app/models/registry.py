@@ -61,6 +61,26 @@ class ModelRegistry:
         msg = f"Unsupported format: {row.model_format}"
         raise ModelRegistryError(msg)
 
+    def infer_feature_count(self, row: LensRecord) -> int | None:
+        """Best effort model input size inference, used for frontend hints."""
+        if row.model_format.lower() != "onnx":
+            return None
+        path = self.ensure_downloaded(row)
+        try:
+            sess = InferenceSession(str(path))
+            inp = sess.get_inputs()
+            if not inp:
+                return None
+            shape = inp[0].shape
+            if len(shape) != 2:
+                return None
+            dim = shape[1]
+            if dim in (None, -1):
+                return None
+            return int(dim)
+        except Exception:
+            return None
+
     def _predict_pickle(self, path: Path, features: list[float]) -> dict[str, Any]:
         try:
             model = joblib.load(path)

@@ -30,16 +30,28 @@ def verify_wallet_signature(
     nonce: str | None,
 ) -> str:
     if not address or not signature or not nonce:
-        raise HTTPException(status_code=401, detail="Incomplete wallet headers")
+        raise HTTPException(
+            status_code=401,
+            detail=(
+                "Wallet authentication required. Provide X-Wallet-Address, "
+                "X-Wallet-Signature and X-Wallet-Nonce headers."
+            ),
+        )
     r = _redis()
     if not r.exists(f"nonce:{nonce}"):
-        raise HTTPException(status_code=401, detail="Invalid or expired nonce")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired nonce. Request a new nonce at /api/v1/auth/nonce.",
+        )
     msg = f"CohortLens auth\nNonce: {nonce}\n"
     message = encode_defunct(text=msg)
     try:
         recovered = Account.recover_message(message, signature=signature)
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid signature: {e}") from e
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid wallet signature. Sign the exact auth message. ({e})",
+        ) from e
     if recovered.lower() != address.lower():
         raise HTTPException(status_code=401, detail="Signature does not match address")
     r.delete(f"nonce:{nonce}")

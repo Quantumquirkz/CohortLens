@@ -1,6 +1,4 @@
 """Dedicated async prediction endpoints."""
-
-from celery.result import AsyncResult
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
@@ -13,8 +11,7 @@ from app.schemas.predictions_api import (
     AsyncPredictEnqueue,
     AsyncPredictionTaskStatus,
 )
-from app.services.async_prediction import enqueue_predict
-from app.tasks.celery_app import celery_app
+from app.services.async_prediction import enqueue_predict, get_prediction_task_snapshot
 
 router = APIRouter()
 
@@ -38,23 +35,7 @@ async def predict_async(
 
 
 @router.get("/{task_id}/status", response_model=AsyncPredictionTaskStatus)
-async def prediction_task_status(task_id: str) -> AsyncPredictionTaskStatus:
+@limiter.limit("60/minute")
+async def prediction_task_status(request: Request, task_id: str) -> AsyncPredictionTaskStatus:
     """Celery task state and result when successful."""
-    r = AsyncResult(task_id, app=celery_app)
-    if r.state == "PENDING":
-        return AsyncPredictionTaskStatus(task_id=task_id, state=r.state, result=None)
-    if r.successful():
-        res = r.result
-        if not isinstance(res, dict):
-            return AsyncPredictionTaskStatus(
-                task_id=task_id,
-                state="SUCCESS",
-                result={"value": res},
-            )
-        return AsyncPredictionTaskStatus(task_id=task_id, state="SUCCESS", result=res)
-    err = str(r.info) if r.info else None
-    return AsyncPredictionTaskStatus(
-        task_id=task_id,
-        state=str(r.state),
-        result={"error": err} if err else None,
-    )
+    return AsyncPredictionTaskStatus(**get_prediction_task_snapshot(task_id))

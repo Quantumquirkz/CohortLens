@@ -4,15 +4,16 @@ import Link from "next/link";
 import { formatEther } from "viem";
 
 import { primaryButtonSmClass } from "@/lib/button-classes";
+import { toWeiBigInt } from "@/lib/wei";
 import type { LensPublic } from "@/types/model";
 
 type Props = {
   models: LensPublic[];
 };
 
-function weiToEthLabel(wei: number): string {
+function weiToEthLabel(wei: number | string): string {
   try {
-    return formatEther(BigInt(Math.trunc(wei)));
+    return formatEther(toWeiBigInt(wei));
   } catch {
     return String(wei);
   }

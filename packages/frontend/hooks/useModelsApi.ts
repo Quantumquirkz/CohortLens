@@ -6,16 +6,29 @@ import { useSignMessage } from "wagmi";
 
 import {
   authNonceUrl,
+  modelDetailUrl,
   modelPredictUrl,
   modelsListUrl,
   predictionStatusUrl,
 } from "@/lib/models-api";
-import type { LensPublic, PredictResponse, PredictTaskStatus } from "@/types/model";
+import type {
+  LensDetail,
+  LensPublic,
+  PredictResponse,
+  PredictTaskStatus,
+} from "@/types/model";
 
 import { useWallet } from "./useWallet";
 
 async function fetchModels(syncChain: boolean): Promise<LensPublic[]> {
   const { data } = await axios.get<LensPublic[]>(modelsListUrl(syncChain), {
+    timeout: 60_000,
+  });
+  return data;
+}
+
+async function fetchModelDetail(modelId: number): Promise<LensDetail> {
+  const { data } = await axios.get<LensDetail>(modelDetailUrl(modelId), {
     timeout: 60_000,
   });
   return data;
@@ -29,6 +42,18 @@ async function fetchPredictionStatus(taskId: string): Promise<PredictTaskStatus>
   return data;
 }
 
+export function parseApiError(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const detail = err.response?.data as { detail?: unknown; error?: unknown } | undefined;
+    if (typeof detail?.detail === "string") return detail.detail;
+    if (typeof detail?.error === "string") return detail.error;
+    if (detail?.detail != null) return JSON.stringify(detail.detail);
+    return err.message || "Network error";
+  }
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
 /**
  * Lists registered models (`GET /api/v1/models`).
  */
@@ -36,6 +61,15 @@ export function useModelsList(syncChain = false) {
   return useQuery({
     queryKey: ["models", "list", syncChain],
     queryFn: () => fetchModels(syncChain),
+  });
+}
+
+export function useModelDetail(modelId: number) {
+  return useQuery({
+    queryKey: ["models", "detail", modelId],
+    queryFn: () => fetchModelDetail(modelId),
+    enabled: Number.isFinite(modelId) && modelId > 0,
+    staleTime: 30_000,
   });
 }
 
@@ -89,12 +123,8 @@ export function useModelPredict() {
         address &&
         signMessageAsync
       ) {
-        try {
-          const auth = await buildWalletAuthHeaders(address, signMessageAsync);
-          Object.assign(headers, auth);
-        } catch {
-          /* no signature: backend may still accept the request */
-        }
+        const auth = await buildWalletAuthHeaders(address, signMessageAsync);
+        Object.assign(headers, auth);
       }
 
       const { data } = await axios.post<PredictResponse>(

@@ -18,6 +18,11 @@ class LensPublic(BaseModel):
     active: bool
 
 
+class LensDetail(LensPublic):
+    feature_count: int | None = None
+    sample_input: list[float] | None = None
+
+
 class LensUploadResponse(BaseModel):
     lens_id: int
     cid: str
@@ -40,3 +45,5 @@ class PredictTaskStatus(BaseModel):
     task_id: str
     state: str
     result: dict | None = None
+    error: str | None = None
+    updated_at: str

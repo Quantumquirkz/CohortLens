@@ -10,7 +10,7 @@ import {
   useWriteContract,
 } from "wagmi";
 
-import { fetchPredictionStatus, useModelPredict } from "@/hooks/useModelsApi";
+import { fetchPredictionStatus, parseApiError, useModelPredict } from "@/hooks/useModelsApi";
 import { primaryButtonClass } from "@/lib/button-classes";
 import { cohortOracleAbi, erc20Abi } from "@/lib/tokenomics-abi";
 import {
@@ -18,10 +18,13 @@ import {
   LENS_TOKEN_ADDRESS,
   tokenomicsConfigured,
 } from "@/lib/tokenomics-config";
-import type { LensPublic } from "@/types/model";
+import { toWeiBigInt } from "@/lib/wei";
+import type { LensPublic, PredictTaskState } from "@/types/model";
 
 type Props = {
   model: LensPublic;
+  featureCount?: number | null;
+  sampleInput?: number[] | null;
 };
 
 function parseFeatures(input: string): number[] | null {
@@ -52,7 +55,21 @@ function parseFeatures(input: string): number[] | null {
   return nums;
 }
 
-export function ModelPredictPanel({ model }: Props) {
+const TERMINAL_STATES = new Set<PredictTaskState | string>([
+  "SUCCESS",
+  "FAILURE",
+  "REVOKED",
+]);
+
+function stateTone(state?: string): "ok" | "warn" | "error" | "loading" {
+  if (!state) return "loading";
+  if (state === "SUCCESS") return "ok";
+  if (state === "FAILURE" || state === "REVOKED") return "error";
+  if (state === "RETRY") return "warn";
+  return "loading";
+}
+
+export function ModelPredictPanel({ model, featureCount, sampleInput }: Props) {
   const { address, isConnected } = useAccount();
   const [rawFeatures, setRawFeatures] = useState("0, 0, 0, 0");
   const [asyncMode, setAsyncMode] = useState(false);
@@ -60,7 +77,7 @@ export function ModelPredictPanel({ model }: Props) {
   const [lensPaymentDone, setLensPaymentDone] = useState(false);
   const predict = useModelPredict();
 
-  const priceWei = BigInt(Math.max(0, Math.trunc(model.price_per_query_wei)));
+  const priceWei = toWeiBigInt(model.price_per_query_wei);
   const needsLensPayment =
     tokenomicsConfigured() && priceWei > BigInt(0) && model.active;
   const canRunInference = !needsLensPayment || lensPaymentDone;
@@ -110,6 +127,12 @@ export function ModelPredictPanel({ model }: Props) {
   };
 
   const features = useMemo(() => parseFeatures(rawFeatures), [rawFeatures]);
+  const featuresCountMismatch =
+    featureCount != null &&
+    featureCount > 0 &&
+    Array.isArray(features) &&
+    features.length !== featureCount;
+  const canSubmitFeatures = Boolean(features) && !featuresCountMismatch;
 
   const poll = useQuery({
     queryKey: ["models", "prediction", taskId],
@@ -117,7 +140,7 @@ export function ModelPredictPanel({ model }: Props) {
     enabled: Boolean(taskId),
     refetchInterval: (q) => {
       const st = q.state.data?.state;
-      if (st === "SUCCESS" || st === "FAILURE") {
+      if (st && TERMINAL_STATES.has(st)) {
         return false;
       }
       return 800;
@@ -134,13 +157,13 @@ export function ModelPredictPanel({ model }: Props) {
         asyncToastKey.current = `ok-${tid}`;
         toast.success("Async prediction complete");
       }
-    } else if (st === "FAILURE") {
+    } else if (st === "FAILURE" || st === "REVOKED") {
       if (asyncToastKey.current !== `fail-${tid}`) {
         asyncToastKey.current = `fail-${tid}`;
-        toast.error("Prediction task failed");
+        toast.error(poll.data?.error || "Prediction task failed");
       }
     }
-  }, [poll.data?.state, poll.data?.result, taskId]);
+  }, [poll.data?.state, poll.data?.result, poll.data?.error, taskId]);
 
   useEffect(() => {
     if (!predict.isSuccess || !predict.data?.async_mode || !predict.data.task_id) {
@@ -157,6 +180,10 @@ export function ModelPredictPanel({ model }: Props) {
       if (rawFeatures.trim() !== "") {
         toast.warning("Invalid features format");
       }
+      return;
+    }
+    if (featuresCountMismatch) {
+      toast.warning(`This model expects exactly ${featureCount} features.`);
       return;
     }
     if (!canRunInference) {
@@ -177,8 +204,7 @@ export function ModelPredictPanel({ model }: Props) {
         }
       })
       .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err);
-        toast.error(msg);
+        toast.error(parseApiError(err));
       });
   };
 
@@ -236,12 +262,21 @@ export function ModelPredictPanel({ model }: Props) {
           <span className="text-xs font-medium uppercase text-muted-foreground">
             Features
           </span>
+          {featureCount != null && featureCount > 0 && (
+            <span className="ml-2 text-xs text-cyan-200">
+              expected: {featureCount}
+            </span>
+          )}
           <textarea
             value={rawFeatures}
             onChange={(e) => setRawFeatures(e.target.value)}
             rows={4}
             className="input-field mt-2 min-h-[7rem] w-full resize-y font-mono text-sm"
-            placeholder="0.1, 0.2 or [0.1, 0.2]"
+            placeholder={
+              sampleInput && sampleInput.length > 0
+                ? JSON.stringify(sampleInput)
+                : "0.1, 0.2 or [0.1, 0.2]"
+            }
           />
         </label>
 
@@ -257,7 +292,7 @@ export function ModelPredictPanel({ model }: Props) {
 
         <button
           type="submit"
-          disabled={!features || predict.isPending || !canRunInference}
+          disabled={!canSubmitFeatures || predict.isPending || !canRunInference}
           className={`${primaryButtonClass} disabled:cursor-not-allowed`}
         >
           {predict.isPending
@@ -271,6 +306,12 @@ export function ModelPredictPanel({ model }: Props) {
       {features === null && rawFeatures.trim() !== "" && (
         <p className="mt-4 text-sm text-amber-200">
           Invalid format. Use comma-separated numbers or a JSON array.
+        </p>
+      )}
+      {featuresCountMismatch && (
+        <p className="mt-2 text-sm text-amber-200">
+          This model requires {featureCount} features, but you provided{" "}
+          {features?.length ?? 0}.
         </p>
       )}
 
@@ -290,6 +331,29 @@ export function ModelPredictPanel({ model }: Props) {
         <p className="mt-4 text-sm text-muted-foreground">
           Task {taskId}: {poll.data?.state ?? "PENDING"}…
         </p>
+      )}
+      {taskId && (
+        <div className="mt-2 flex items-center gap-2 text-xs">
+          <span
+            className={`h-2 w-2 rounded-full ${
+              stateTone(poll.data?.state) === "ok"
+                ? "bg-emerald-400"
+                : stateTone(poll.data?.state) === "error"
+                  ? "bg-red-400"
+                  : stateTone(poll.data?.state) === "warn"
+                    ? "bg-amber-400"
+                    : "bg-cyan-300 animate-pulse"
+            }`}
+            aria-hidden
+          />
+          <span className="text-muted-foreground">
+            {poll.data?.state ?? "PENDING"}
+            {poll.data?.updated_at ? ` · ${poll.data.updated_at}` : ""}
+          </span>
+        </div>
+      )}
+      {poll.data?.error && (
+        <p className="mt-3 text-sm text-destructive">{poll.data.error}</p>
       )}
 
       {asyncResult && (

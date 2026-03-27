@@ -26,4 +26,4 @@ This writes `static/openapi.json`. You can browse the same schema with Swagger U
 
 The generated file is served as a static asset at `/openapi.json` after `npm run build`. Use external tools (Redoc, Postman) or the interactive **Swagger** UI on the running server for exploration.
 
-Main route groups (see FastAPI app): `/api/v1/cohorts`, `/api/v1/models`, `/api/v1/predictions`, `/api/v1/auth`.
+Main route groups (see FastAPI app): `/api/v1/cohorts`, `/api/v1/models`, `/api/v1/predictions`, `/api/v1/auth`, `/api/v1/risk`, `/api/v1/alerts` (AML screening MVP: see [risk-and-aml](./risk-and-aml.md)).

@@ -141,6 +141,24 @@ class Settings(BaseSettings):
         description="If set, prediction requests may use X-Internal-Key with this value when REQUIRE_WALLET_AUTH=true",
     )
 
+    RISK_API_KEYS: str = Field(
+        default="",
+        description="Comma-separated API keys for /api/v1/risk and /api/v1/alerts; empty = no key required (dev only)",
+    )
+    RISK_RULESET_VERSION: str = Field(default="rs-0.1.0")
+    RISK_MODEL_VERSION: str = Field(default="heuristic-0.1.0")
+    RISK_BLOCKS_PER_HOUR: int = Field(
+        default=1800,
+        ge=100,
+        description="Approx blocks per hour for window sizing (e.g. Polygon ~2s blocks)",
+    )
+    RISK_FEATURE_CACHE_TTL_SECONDS: int = Field(default=300, ge=30)
+    RISK_BATCH_MAX_ADDRESSES: int = Field(default=500, ge=1, le=5000)
+    RISK_UNSUPERVISED_ENABLED: bool = Field(
+        default=False,
+        description="If true, blend IsolationForest score when reference population is available",
+    )
+
     def cors_origins_list(self) -> list[str]:
         """Origins allowed by CORS middleware."""
         return [p.strip() for p in self.CORS_ORIGINS.split(",") if p.strip()]
@@ -171,6 +189,9 @@ class Settings(BaseSettings):
     def hf_allowed_repos_list(self) -> list[str]:
         """Normalized allowlist entries; '*' means unrestricted."""
         return [p.strip() for p in self.HF_ALLOWED_REPOS.split(",") if p.strip()]
+
+    def risk_api_keys_list(self) -> list[str]:
+        return [p.strip() for p in self.RISK_API_KEYS.split(",") if p.strip()]
 
 
 settings = Settings()
